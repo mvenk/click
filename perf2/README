@@ -1,0 +1,17 @@
+All the radix[1-6].click files contain the 167k regression test. 
+
+The testrunner.sh file runs each one of these files using "click
+radix[1-6].click" and times the result using the "time" program. 
+
+The testrunner.sh takes an argument N which is the number of times
+each click file needs to be run. The times are averaged and stored in
+a ".click.out" file.
+
+Usage:
+
+	./testrunner.sh <N>
+
+The "mean.sh" program computes the mean wall clock time and also the
+maximum resident working set. The "mean" binary program (used by
+"mean.sh") computes the average of the numbers it sees on stdin.
+
