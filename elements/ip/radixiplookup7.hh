@@ -77,8 +77,8 @@ class RadixIPLookup7 : public IPRouteTable { public:
     const char *port_count() const		{ return "1/-"; }
     const char *processing() const		{ return PUSH; }
 
-    static const int lglvl1 = 8;
-    static const int lglvln = 4;
+    static const int lglvl1 = 12;
+    static const int lglvln = 5;
 
     void cleanup(CleanupStage);
 

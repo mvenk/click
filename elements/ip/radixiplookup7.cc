@@ -31,24 +31,24 @@ CLICK_DECLS
 class RadixIPLookup7::Radix { public:
 
     static Radix *make_radix(int level);
-    static void free_radix(Radix *r);
+    static void free_radix(Radix *r, int level);
 
-    int change(uint32_t addr, uint32_t mask, int key, bool set);
+    int change(uint32_t addr, uint32_t mask, int key, bool set, int level);
 
-    static inline int lookup(const Radix *r, int cur, uint32_t addr) {
+    static inline int lookup(const Radix *r, int cur, uint32_t addr, int level) {
 	while (r) {
-	    int i1 = (addr >> bitshift(r->_level)) & (nbuckets(r->_level) - 1);
+	    int i1 = (addr >> bitshift(level)) & (nbuckets(level) - 1);
 	    const Child &c = r->_children[i1];
 	    if (c.key)
 		cur = c.key;
 	    r = c.child;
+	    level++;
 	}
 	return cur;
     }
 
   private:
 
-    int _level;
     struct Child {
 	int key;
 	Radix *child;
@@ -57,8 +57,8 @@ class RadixIPLookup7::Radix { public:
     Radix()			{ }
     ~Radix()			{ }
 
-    int &key_for(int i) {
-	int n = nbuckets(_level);
+    int &key_for(int i, int level) {
+	int n = nbuckets(level);
 	assert(i >= 2 && i < n * 2);
 	if (i >= n)
 	    return _children[i - n].key;
@@ -94,7 +94,6 @@ RadixIPLookup7::Radix::make_radix(int level)
 {
     int n = nbuckets(level);
     if (Radix* r = (Radix*) new unsigned char[sizeof(Radix) + n * sizeof(Child) + (n - 2) * sizeof(int)]) {
-	r->_level = level;
 	memset(r->_children, 0, n * sizeof(Child) + (n - 2) * sizeof(int));
 	return r;
     } else
@@ -102,30 +101,30 @@ RadixIPLookup7::Radix::make_radix(int level)
 }
 
 void
-RadixIPLookup7::Radix::free_radix(Radix* r)
+RadixIPLookup7::Radix::free_radix(Radix* r, int level)
 {
-    int n = nbuckets(r->_level);
+    int n = nbuckets(level);
     for (int i = 0; i < n; i++)
 	if (r->_children[i].child)
-	    free_radix(r->_children[i].child);
+	    free_radix(r->_children[i].child, level+1);
     delete[] (unsigned char *)r;
 }
 
 int
-RadixIPLookup7::Radix::change(uint32_t addr, uint32_t mask, int key, bool set)
+RadixIPLookup7::Radix::change(uint32_t addr, uint32_t mask, int key, bool set, int level)
 {
-    int shift = bitshift(_level);
-    int n = nbuckets(_level);
+    int shift = bitshift(level);
+    int n = nbuckets(level);
     int i1 = (addr >> shift) & (n - 1);
 
     // check if change only affects children
     if (mask & ((1U << shift) - 1)) {
 	if (!_children[i1].child
-	    && (_children[i1].child = make_radix(_level + 1))) {
+	    && (_children[i1].child = make_radix(level + 1))) {
 	    ;
 	}
 	if (_children[i1].child)
-	    return _children[i1].child->change(addr, mask, key, set);
+	    return _children[i1].child->change(addr, mask, key, set, level+1);
 	else
 	    return 0;
     }
@@ -135,18 +134,18 @@ RadixIPLookup7::Radix::change(uint32_t addr, uint32_t mask, int key, bool set)
     int nmasked = n - ((mask >> shift) & (n - 1));
     for (int x = nmasked; x > 1; x /= 2)
 	i1 /= 2;
-    int replace_key = key_for(i1), prev_key = replace_key;
-    if (prev_key && i1 > 3 && key_for(i1 / 2) == prev_key)
+    int replace_key = key_for(i1, level), prev_key = replace_key;
+    if (prev_key && i1 > 3 && key_for(i1 / 2, level) == prev_key)
 	prev_key = 0;
 
     // replace previous key with current key, if appropriate
     if (!key && i1 > 3)
-	key = key_for(i1 / 2);
+	key = key_for(i1 / 2, level);
     if (prev_key != key && (!prev_key || set)) {
 	for (nmasked = 1; i1 < n * 2; i1 *= 2, nmasked *= 2)
 	    for (int x = i1; x < i1 + nmasked; ++x)
-		if (key_for(x) == replace_key)
-		    key_for(x) = key;
+		if (key_for(x, level) == replace_key)
+		    key_for(x, level) = key;
     }
     return prev_key;
 }
@@ -165,8 +164,9 @@ RadixIPLookup7::~RadixIPLookup7()
 void
 RadixIPLookup7::cleanup(CleanupStage)
 {
+    int level = 1;
     _v.clear();
-    Radix::free_radix(_radix);
+    Radix::free_radix(_radix, level);
     _radix = 0;
 }
 
@@ -191,7 +191,8 @@ RadixIPLookup7::add_route(const IPRoute &route, bool set, IPRoute *old_route, Er
     if (route.mask) {
 	uint32_t addr = ntohl(route.addr.addr());
 	uint32_t mask = ntohl(route.mask.addr());
-	last_key = _radix->change(addr, mask, found + 1, set);
+	int level = 1;
+	last_key = _radix->change(addr, mask, found + 1, set, level);
     } else {
 	last_key = _default_key;
 	if (!last_key || set)
@@ -226,8 +227,9 @@ RadixIPLookup7::remove_route(const IPRoute& route, IPRoute* old_route, ErrorHand
     if (route.mask) {
 	uint32_t addr = ntohl(route.addr.addr());
 	uint32_t mask = ntohl(route.mask.addr());
+	int level = 1;
 	// NB: this will never actually make changes
-	last_key = _radix->change(addr, mask, 0, false);
+	last_key = _radix->change(addr, mask, 0, false, level);
     } else
 	last_key = _default_key;
 
@@ -241,7 +243,8 @@ RadixIPLookup7::remove_route(const IPRoute& route, IPRoute* old_route, ErrorHand
     if (route.mask) {
 	uint32_t addr = ntohl(route.addr.addr());
 	uint32_t mask = ntohl(route.mask.addr());
-	(void) _radix->change(addr, mask, 0, true);
+	int level = 1;
+	(void) _radix->change(addr, mask, 0, true, level);
     } else
 	_default_key = 0;
     return 0;
@@ -250,7 +253,8 @@ RadixIPLookup7::remove_route(const IPRoute& route, IPRoute* old_route, ErrorHand
 int
 RadixIPLookup7::lookup_route(IPAddress addr, IPAddress &gw) const
 {
-    int key = Radix::lookup(_radix, _default_key, ntohl(addr.addr()));
+    int level = 1;
+    int key = Radix::lookup(_radix, _default_key, ntohl(addr.addr()), level);
     if (key) {
 	gw = _v[key - 1].gw;
 	return _v[key - 1].port;
