@@ -27,6 +27,7 @@
 #include <click/glue.hh>
 #include <click/straccum.hh>
 #include "radixiplookup6.hh"
+#include "allocchunk.hh"
 CLICK_DECLS
 
 class RadixIPLookup6::Radix { public:
@@ -114,7 +115,7 @@ RadixIPLookup6::Radix::change(uint32_t addr, uint32_t mask, int key, bool set)
     // check if change only affects children
     if (mask & ((1U << _bitshift) - 1)) {
 	if (!_children[i1].child
-	    && (_children[i1].child = make_radix(_bitshift - 3, 8)))
+	    && (_children[i1].child = make_radix(_bitshift - 4, 16)))
 	    ++_nchildren;
 	if (_children[i1].child)
 	    return _children[i1].child->change(addr, mask, key, set);
@@ -145,7 +146,7 @@ RadixIPLookup6::Radix::change(uint32_t addr, uint32_t mask, int key, bool set)
 
 
 RadixIPLookup6::RadixIPLookup6()
-    : _vfree(-1), _default_key(0), _radix(Radix::make_radix(24, 256))
+    : _vfree(-1), _default_key(0), _radix(Radix::make_radix(24, 256)),_chunk(new AllocChunk(10,10))
 {
 }
 
