@@ -1,4 +1,4 @@
-#include "allocchunk.hh"
+#include <click/allocchunk.hh>
 #include<iostream>
 #include<cstring>
 using namespace std;
@@ -108,10 +108,10 @@ int TestAllocMoreBlocks()
  chunk.free_all();
  return 1;
 }
-int main()
-{
-  TestChunkWrite();
-  if(!TestAllocMoreBlocks())
-    cout<<"more blocks failed";
-}
+// int main()
+// {
+//   TestChunkWrite();
+//   if(!TestAllocMoreBlocks())
+//     cout<<"more blocks failed";
+// }
 
