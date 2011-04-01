@@ -26,8 +26,9 @@
 #include <click/error.hh>
 #include <click/glue.hh>
 #include <click/straccum.hh>
+#include <click/allocchunk.hh>
 #include "radixiplookup6.hh"
-#include "allocchunk.hh"
+
 CLICK_DECLS
 
 class RadixIPLookup6::Radix { public:

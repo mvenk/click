@@ -4,7 +4,7 @@
 #include <click/glue.hh>
 #include <click/element.hh>
 #include "iproutetable.hh"
-#include "allocchunk.hh"
+#include <click/allocchunk.hh>
 CLICK_DECLS
 
 /*
