@@ -107,8 +107,9 @@ RadixIPLookup2::Radix::change(uint32_t addr, uint32_t mask, int key, bool set)
 
     // check if change only affects children
     if (mask & ((1U << _bitshift) - 1)) {
+	// use branching factor of 2^5 at levels below the root
 	if (!_children[i1].child
-	    && (_children[i1].child = make_radix(_bitshift - 3, 8)))
+	    && (_children[i1].child = make_radix(_bitshift - 5, 32)))
 	    ++_nchildren;
 	if (_children[i1].child)
 	    return _children[i1].child->change(addr, mask, key, set);
@@ -137,9 +138,9 @@ RadixIPLookup2::Radix::change(uint32_t addr, uint32_t mask, int key, bool set)
     return prev_key;
 }
 
-
+// Use branching factor of 2^12 at the root level
 RadixIPLookup2::RadixIPLookup2()
-    : _vfree(-1), _default_key(0), _radix(Radix::make_radix(24, 256))
+    : _vfree(-1), _default_key(0), _radix(Radix::make_radix(20, 4096))
 {
 }
 
