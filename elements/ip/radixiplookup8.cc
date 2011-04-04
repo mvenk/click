@@ -26,7 +26,6 @@
 #include <click/glue.hh>
 #include <click/straccum.hh>
 #include "radixiplookup8.hh"
-#include <stdio.h>
 CLICK_DECLS
 
 class RadixIPLookup8::Radix { public:
@@ -42,9 +41,6 @@ class RadixIPLookup8::Radix { public:
 	    const Child &c = r->_children[i1];
 	    if (c.key)
 		cur = c.key;
-	    int prefix_length = 32 - r->_bitshift;
-	    printf("\n%d",prefix_length);
-	    //cout<<addr<<r->_bitshift;
 	    r = c.child;
 	}
 	return cur;
@@ -108,7 +104,7 @@ RadixIPLookup8::Radix::change(uint32_t addr, uint32_t mask, int key, bool set)
     // check if change only affects children
     if (mask & ((1U << _bitshift) - 1)) {
 	if (!_children[i1].child
-	    && (_children[i1].child = make_radix(_bitshift - 1, 2)))
+	    && (_children[i1].child = make_radix(_bitshift - 5, 32)))
 	    ++_nchildren;
 	if (_children[i1].child)
 	    return _children[i1].child->change(addr, mask, key, set);
@@ -138,12 +134,12 @@ RadixIPLookup8::Radix::change(uint32_t addr, uint32_t mask, int key, bool set)
 }
 
 
-RadixIPLookup8::RadixIPLookup8()
-    : _vfree(-1), _default_key(0), _radix(Radix::make_radix(31,2))
+RadixIPLookup8::RadixIPLookup()
+    : _vfree(-1), _default_key(0), _radix(Radix::make_radix(20, 4096))
 {
 }
 
-RadixIPLookup8::~RadixIPLookup8()
+RadixIPLookup8::~RadixIPLookup()
 {
 }
 
