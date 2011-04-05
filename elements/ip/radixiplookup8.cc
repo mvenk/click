@@ -134,12 +134,12 @@ RadixIPLookup8::Radix::change(uint32_t addr, uint32_t mask, int key, bool set)
 }
 
 
-RadixIPLookup8::RadixIPLookup()
+RadixIPLookup8::RadixIPLookup8()
     : _vfree(-1), _default_key(0), _radix(Radix::make_radix(20, 4096))
 {
 }
 
-RadixIPLookup8::~RadixIPLookup()
+RadixIPLookup8::~RadixIPLookup8()
 {
 }
 
