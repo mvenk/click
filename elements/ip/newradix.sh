@@ -17,9 +17,9 @@ target_hh=radixiplookup$target_n.hh
 cp -n $src_cc $target_cc
 cp -n $src_hh $target_hh
 
-perl -i.bak -pe "s/RadixIPLookup$src_n/RadixIPLookup$target_n/" $target_cc 
-perl -i.bak -pe "s/$src_hh/$target_hh/" $target_cc 
-perl -i.bak -pe "s/RadixIPLookup$src_n/RadixIPLookup$target_n/" $target_hh
-perl -i.bak -pe "s/CLICK_RADIXIPLOOKUP${src_n}_HH/CLICK_RADIXIPLOOKUP${target_n}_HH/" $target_hh
+perl -i.bak -pe "s/RadixIPLookup$src_n/RadixIPLookup$target_n/g" $target_cc 
+perl -i.bak -pe "s/$src_hh/$target_hh/g" $target_cc 
+perl -i.bak -pe "s/RadixIPLookup$src_n/RadixIPLookup$target_n/g" $target_hh
+perl -i.bak -pe "s/CLICK_RADIXIPLOOKUP${src_n}_HH/CLICK_RADIXIPLOOKUP${target_n}_HH/g" $target_hh
 rm *.bak
 

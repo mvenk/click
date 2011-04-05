@@ -1,5 +1,5 @@
 #!/bin/bash
-for j in setup[17].click radix[17].click 
+for j in setup[1-8].click radix[1-8].click 
 do
     >$j.out
     for i in $(seq 1 $1);
