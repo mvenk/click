@@ -26,7 +26,7 @@ RadixIPLookup		The original RadixIPLookup element. With
 			after that.
 
 RadixIPLookup2		Radix nodes memaligned to 64 bytes. Branching
-			factor of 2^8 at first level and 2^4 after that.
+			factor of 2^8 at first level and 2^3 after that.
 
 RadixIPLookup3		Branching factor of 2^8 at first level and 2^3
 			after that.
