@@ -4,6 +4,7 @@
 #include <click/glue.hh>
 #include <click/element.hh>
 #include "iproutetable.hh"
+#include <click/allocchunk.hh>
 CLICK_DECLS
 
 /*
@@ -91,10 +92,10 @@ class RadixIPLookup6 : public IPRouteTable { public:
     // Simple routing table
     Vector<IPRoute> _v;
     int _vfree;
-
+    //AllocChunk *_chunk;
     int _default_key;
     Radix *_radix;
-
+    
 };
 
 CLICK_ENDDECLS
