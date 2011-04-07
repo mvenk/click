@@ -27,7 +27,7 @@ private:
 public:
   static AllocChunk* Instance();
   AllocChunk(AllocChunk const&){};             // copy constructor is private
-  AllocChunk& operator=(AllocChunk const&){};  // assignment operator is private
+  AllocChunk& operator=(AllocChunk const&);  // assignment operator is private
   static AllocChunk* m_pInstance;
   void init_block_list(void);
   void add_block(void);

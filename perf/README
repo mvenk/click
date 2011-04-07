@@ -15,3 +15,44 @@ The "mean.sh" program computes the mean wall clock time and also the
 maximum resident working set. The "mean" binary program (used by
 "mean.sh") computes the average of the numbers it sees on stdin.
 
+Edit the testrunner.sh file to choose which one of the RadixIPLookup
+elements should be chosen to run in the test. The description of each
+RadixIPLookup element is given below.
+
+Element			Description
+---------------------------------------------------------------------
+RadixIPLookup		The original RadixIPLookup element. With
+			branching factor 2^8 at the first level and 2^4
+			after that.
+
+RadixIPLookup2		Radix nodes memaligned to 64 bytes. Branching
+			factor of 2^8 at first level and 2^4 after that.
+
+RadixIPLookup3		Branching factor of 2^8 at first level and 2^3
+			after that.
+
+RadixIPLookup4		Branching factor of 2^8 at first level and 2^2
+			after that.
+
+RadixIPLookup5		Branching factor of 2^16 at first level and
+			2^4 after that.
+
+RadixIPLookup6		Radix nodes memaligned to 64 bytes. Super
+			children allocated in a separate call to
+			new. Branching factor of 2^8 at the first
+			level and 2^3 after that.
+
+RadixIPLookup7		RadixIPLookup7 doesn't have the following
+			member fields "_bitshift", "_n",
+			"_nchildren". These fields are derived
+			automatically from the depth at which a
+			particular node is at. It has additional
+			functions to calculate these fields. Branching
+			factor of 2^12 at first level and 2^5 after that.
+
+RadixIPLookup8		Branching factor of 2^12 at first level and
+			2^5 after that. Used to compare performance
+			against RadixIPLookup7.
+			
+
+

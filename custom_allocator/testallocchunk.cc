@@ -20,19 +20,23 @@ int TestWriteToAChunk(void*ptr, int size)
   return 1;
 }
 
-void TestChunkWrite()
+int TestChunkWrite()
 {
   /* allocate 10 chunks of 16 */
   AllocChunk::Instance()->create(16,10);
   // now we have 10 blocks of size 16 bytes
   // get 1 block
   void* ptr= AllocChunk::Instance()->alloc();
-  if(TestWriteToAChunk(ptr,2))
+  int pass=0;
+  if(TestWriteToAChunk(ptr,2)) {
      cout<<" Allocation and write successful";
-   else
+     pass=1; 
+  }
+  else
      cout<<" Allocation and write test failed";
   
   AllocChunk::Instance()->free_all();
+  return pass;
 }
 
 int TestAllocMoreBlocks()
@@ -53,7 +57,18 @@ int TestAllocMoreBlocks()
 }
 int main()
 {
-  TestChunkWrite();
-  if(!TestAllocMoreBlocks())
-    cout<<"more blocks failed";
+  if(!TestChunkWrite()) {
+    cout<<"TestChunkWritee failed"<<endl;
+    return -1;
+  }
+  else 
+    cout<<"TestChunkWrite passed"<<endl;
+  
+  if(!TestAllocMoreBlocks())  {
+    cout<<"TestMoreBlocks failed"<<endl;
+    return -1;
+  }
+  else
+    cout<<"TestMoreBlocks passed"<<endl;
+  cout<<"All Tests Passed Successfully."<<endl;
 }

@@ -1,6 +1,6 @@
 import sys, string
 input_file = sys.argv[1]
-input = open(input_file,"r").readlines()
+input = open(input_file,"r").xreadlines()
 cdf_dict={}
 
 
