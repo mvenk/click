@@ -92,7 +92,7 @@ class RadixIPLookup6 : public IPRouteTable { public:
     // Simple routing table
     Vector<IPRoute> _v;
     int _vfree;
-    AllocChunk *_chunk;
+    //AllocChunk *_chunk;
     int _default_key;
     Radix *_radix;
     

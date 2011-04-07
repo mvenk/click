@@ -55,12 +55,14 @@ class RadixIPLookup6::Radix { public:
     int _n;
     int _nchildren;
     int * _superchildren;
+    static AllocChunk *_chunk = new AllocChunk(144,4096);
+    static int i=1;
     struct Child {
 	int key;
 	Radix *child;
     } _children[0];    
     
-    Radix()			{ }
+    Radix()                     { }
     ~Radix()			{ }
 
     int &key_for(int i) {
@@ -83,6 +85,9 @@ RadixIPLookup6::Radix::make_radix(int bitshift, int n)
 {
     int size = sizeof(Radix) + n * sizeof(Child);
     Radix* r;
+    // allocchunk currently does not allow for variable sized chunks.
+    // so the allocchunk is not used for the first level,
+    // it is used for all subsequent levels since they are of the same size.
     if(bitshift == 24)
 	r = (Radix*)new unsigned char[size];
     else
@@ -151,7 +156,7 @@ RadixIPLookup6::Radix::change(uint32_t addr, uint32_t mask, int key, bool set)
 
 
 RadixIPLookup6::RadixIPLookup6()
-    : _vfree(-1), _default_key(0), _radix(Radix::make_radix(24, 256)),_chunk(new AllocChunk(144,4096))
+    : _vfree(-1), _default_key(0), _radix(Radix::make_radix(24, 256))
 {
 }
 
