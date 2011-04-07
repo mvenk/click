@@ -1,5 +1,5 @@
 #!/bin/bash
-for j in setup[127].click radix[127].click 
+for j in 1m_gt20.setup[1-8].click 1m_gt20.radix[1-8].click 
 do
     >$j.out
     for i in $(seq 1 $1);
