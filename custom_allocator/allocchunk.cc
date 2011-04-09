@@ -4,7 +4,7 @@
 using namespace std;
 
 // Global static pointer used to ensure a single instance of the class.
-AllocChunk* AllocChunk::m_pInstance = NULL;  
+AllocChunk* AllocChunk::m_pInstance = 0;  
 
 /** This function is called to create an instance of the class. 
     Calling the constructor publicly is not allowed. The constructor 
@@ -13,29 +13,25 @@ AllocChunk* AllocChunk::m_pInstance = NULL;
 
 AllocChunk* AllocChunk::Instance()
 {
-   if (!m_pInstance)   // Only allow one instance of class to be generated.
-     m_pInstance = new AllocChunk();
+  if (!m_pInstance)   // Only allow one instance of class to be generated.
+    m_pInstance = new AllocChunk();
 
-   return m_pInstance;
+  return m_pInstance;
 }
 
 
 void AllocChunk :: create(int size,int multiple)
 {
-  if(!_is_created)
-    {
   this->size = size;
   this->multiple = multiple; 
   head = 0; 
   tail = 0;
-  _is_created = 1;
-    }
 }
 
 AllocChunk::AllocChunk()
-  {
-    _is_created=0;
-  }
+{
+
+}
 AllocChunk :: ~AllocChunk()
 {
 }
@@ -84,10 +80,5 @@ void AllocChunk :: free_all(void) {
     head = tail = 0;
   }
 }
-
-//int main()
-//{
-  //  return 0;
-  //}
 
 
