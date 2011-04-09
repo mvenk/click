@@ -55,8 +55,6 @@ class RadixIPLookup6::Radix { public:
     int _n;
     int _nchildren;
     int * _superchildren;
-    static AllocChunk *_chunk = new AllocChunk(144,4096);
-    static int i=1;
     struct Child {
 	int key;
 	Radix *child;
@@ -91,7 +89,7 @@ RadixIPLookup6::Radix::make_radix(int bitshift, int n)
     if(bitshift == 24)
 	r = (Radix*)new unsigned char[size];
     else
-	r= _chunk.alloc();
+	r= (Radix*)AllocChunk::Instance()->alloc();
     if(r)
 	{
 	    r->_superchildren = (int *)new unsigned char[(n - 2) * sizeof(int)];
@@ -110,11 +108,6 @@ RadixIPLookup6::Radix::make_radix(int bitshift, int n)
 void
 RadixIPLookup6::Radix::free_radix(Radix* r)
 {
-    if (r->_nchildren)
-	for (int i = 0; i < r->_n; i++)
-	    if (r->_children[i].child)
-		free_radix(r->_children[i].child);
-    delete[] (unsigned char *)r;
 }
 
 int
@@ -158,10 +151,12 @@ RadixIPLookup6::Radix::change(uint32_t addr, uint32_t mask, int key, bool set)
 RadixIPLookup6::RadixIPLookup6()
     : _vfree(-1), _default_key(0), _radix(Radix::make_radix(24, 256))
 {
+    AllocChunk::Instance()->create(144,4096);
 }
 
 RadixIPLookup6::~RadixIPLookup6()
 {
+    AllocChunk::Instance()->free_all();
 }
 
 
