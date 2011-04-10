@@ -1,6 +1,6 @@
 #!/bin/bash
 conf=$2
-if [$conf -eq ""]; then
+if [ $conf == "" ]; then
     conf="default.conf"
 fi
 
