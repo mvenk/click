@@ -26,20 +26,20 @@
 #include <click/glue.hh>
 #include <click/straccum.hh>
 #include <click/allocchunk.hh>
-#include "radixiplookup6.hh"
+#include "radixiplookup9.hh"
 
 CLICK_DECLS
 
-class RadixIPLookup6::Radix { public:
+class RadixIPLookup9::Radix { public:
 
-    static Radix *make_radix(int bitshift, int n);
-    static void free_radix(Radix *r);
+    static Radix *make_radix(int level);
+    static void free_radix(Radix *r, int level);
 
-    int change(uint32_t addr, uint32_t mask, int key, bool set);
+    int change(uint32_t addr, uint32_t mask, int key, bool set, int level);
 
-    static inline int lookup(const Radix *r, int cur, uint32_t addr) {
+    static inline int lookup(const Radix *r, int cur, uint32_t addr, int level) {
 	while (r) {
-	    int i1 = (addr >> r->_bitshift) & (r->_n - 1);
+	    int i1 = (addr >> bitshift(level)) & (nbuckets(level) - 1);
 	    const Child &c = r->_children[i1];
 	    if (c.key)
 		cur = c.key;
@@ -49,54 +49,64 @@ class RadixIPLookup6::Radix { public:
     }
 
   private:
-
-    int  _bitshift;
-    int _n;
-    int _nchildren;
-    int * _superchildren;
+	int * _superchildren;
     struct Child {
 	int key;
 	Radix *child;
-    } _children[0];    
-    
-    Radix()                     { }
+    } _children[0];
+
+    Radix()			{ }
     ~Radix()			{ }
 
-    int &key_for(int i) {
-	assert(i >= 2 && i < _n * 2);
-	if (i >= _n)
-	    return _children[i - _n].key;
+    int &key_for(int i, int level) {
+	int n = nbuckets(level);
+	assert(i >= 2 && i < n * 2);
+	if (i >= n)
+	    return _children[i - n].key;
 	else {
-	    //  int *x = reinterpret_cast<int *>(_children + _n);
-	    int *x= _superchildren;
+	    int *x = reinterpret_cast<int *>(_children + n);
 	    return x[i - 2];
 	}
     }
 
-    friend class RadixIPLookup6;
+    static inline int bitshift1(void) {
+	return (32 - lglvl1);
+    }
+    
+    static inline int bitshiftn(int i) {
+	return (bitshift1() - (i -1) * lglvln);
+    }
+
+    static inline int bitshift(int i) {
+	return ((i == 1) ? (bitshift1()) : bitshiftn(i));
+    }
+
+    static inline int nbuckets(int i) {
+	return (( i == 1) ? (1 << lglvl1) : (1 << lglvln));
+    }
+	
+
+    friend class RadixIPLookup9;
 
 };
 
-RadixIPLookup6::Radix*
-RadixIPLookup6::Radix::make_radix(int bitshift, int n)
+RadixIPLookup9::Radix*
+RadixIPLookup9::Radix::make_radix(int level)
 {
-    int size = sizeof(Radix) + n * sizeof(Child);
+    int n = nbuckets(level);
+    int level1_size = sizeof(Radix) + n * sizeof(Child);
     Radix* r;
     // allocchunk currently does not allow for variable sized chunks.
     // so the allocchunk is not used for the first level,
     // it is used for all subsequent levels since they are of the same size.
-    if(bitshift == 24)
-	r = (Radix*)new unsigned char[size];
+    if(level == 1)
+	r = (Radix*)new unsigned char[level1_size];
     else
 	r= (Radix*)AllocChunk::Instance()->alloc();
     if(r)
 	{
 	    r->_superchildren = (int *)new unsigned char[(n - 2) * sizeof(int)];
 	    if (r->_superchildren) {
-		r->_bitshift = bitshift;
-		r->_n = n;
-		r->_nchildren = 0;
-		memset(r->_children, 0, n * sizeof(Child));
 		memset(r->_superchildren,0,(n - 2) * sizeof(int));
 		return r;
 	    }
@@ -105,71 +115,79 @@ RadixIPLookup6::Radix::make_radix(int bitshift, int n)
 }
 
 void
-RadixIPLookup6::Radix::free_radix(Radix* r)
+RadixIPLookup9::Radix::free_radix(Radix* r, int level)
 {
+
 }
 
 int
-RadixIPLookup6::Radix::change(uint32_t addr, uint32_t mask, int key, bool set)
+RadixIPLookup9::Radix::change(uint32_t addr, uint32_t mask, int key, bool set, int level)
 {
-    int i1 = (addr >> _bitshift) & (_n - 1);
+    int shift = bitshift(level);
+    int n = nbuckets(level);
+    int i1 = (addr >> shift) & (n - 1);
 
     // check if change only affects children
-    if (mask & ((1U << _bitshift) - 1)) {
+    if (mask & ((1U << shift) - 1)) {
 	if (!_children[i1].child
-	    && (_children[i1].child = make_radix(_bitshift - 4, 16)))
-	    ++_nchildren;
+	    && (_children[i1].child = make_radix(level + 1))) {
+	    ;
+	}
 	if (_children[i1].child)
-	    return _children[i1].child->change(addr, mask, key, set);
+	    return _children[i1].child->change(addr, mask, key, set, level+1);
 	else
 	    return 0;
     }
 
     // find current key
-    i1 = _n + i1;
-    int nmasked = _n - ((mask >> _bitshift) & (_n - 1));
+    i1 = n + i1;
+    int nmasked = n - ((mask >> shift) & (n - 1));
     for (int x = nmasked; x > 1; x /= 2)
 	i1 /= 2;
-    int replace_key = key_for(i1), prev_key = replace_key;
-    if (prev_key && i1 > 3 && key_for(i1 / 2) == prev_key)
+    int replace_key = key_for(i1, level), prev_key = replace_key;
+    if (prev_key && i1 > 3 && key_for(i1 / 2, level) == prev_key)
 	prev_key = 0;
 
     // replace previous key with current key, if appropriate
     if (!key && i1 > 3)
-	key = key_for(i1 / 2);
+	key = key_for(i1 / 2, level);
     if (prev_key != key && (!prev_key || set)) {
-	for (nmasked = 1; i1 < _n * 2; i1 *= 2, nmasked *= 2)
+	for (nmasked = 1; i1 < n * 2; i1 *= 2, nmasked *= 2)
 	    for (int x = i1; x < i1 + nmasked; ++x)
-		if (key_for(x) == replace_key)
-		    key_for(x) = key;
+		if (key_for(x, level) == replace_key)
+		    key_for(x, level) = key;
     }
     return prev_key;
 }
 
 
-RadixIPLookup6::RadixIPLookup6()
-    : _vfree(-1), _default_key(0), _radix(Radix::make_radix(24, 256))
+RadixIPLookup9::RadixIPLookup9()
+    : _vfree(-1), _default_key(0), _radix(Radix::make_radix(1))
 {
-    AllocChunk::Instance()->create(144,4096);
+    // the number of children = 2^braching factor which is defined by lglvln
+    int num_children = 1<<lglvln;
+    int leveln_size = sizeof(Radix) + num_children * (sizeof(int*) + sizeof(int)); 
+    AllocChunk::Instance()->create(260,4096);
 }
 
-RadixIPLookup6::~RadixIPLookup6()
+RadixIPLookup9::~RadixIPLookup9()
 {
     AllocChunk::Instance()->free_all();
 }
 
 
 void
-RadixIPLookup6::cleanup(CleanupStage)
+RadixIPLookup9::cleanup(CleanupStage)
 {
+    int level = 1;
     _v.clear();
-    Radix::free_radix(_radix);
+    Radix::free_radix(_radix, level);
     _radix = 0;
 }
 
 
 String
-RadixIPLookup6::dump_routes()
+RadixIPLookup9::dump_routes()
 {
     StringAccum sa;
     for (int j = _vfree; j >= 0; j = _v[j].extra)
@@ -182,13 +200,14 @@ RadixIPLookup6::dump_routes()
 
 
 int
-RadixIPLookup6::add_route(const IPRoute &route, bool set, IPRoute *old_route, ErrorHandler *)
+RadixIPLookup9::add_route(const IPRoute &route, bool set, IPRoute *old_route, ErrorHandler *)
 {
     int found = (_vfree < 0 ? _v.size() : _vfree), last_key;
     if (route.mask) {
 	uint32_t addr = ntohl(route.addr.addr());
 	uint32_t mask = ntohl(route.mask.addr());
-	last_key = _radix->change(addr, mask, found + 1, set);
+	int level = 1;
+	last_key = _radix->change(addr, mask, found + 1, set, level);
     } else {
 	last_key = _default_key;
 	if (!last_key || set)
@@ -217,14 +236,15 @@ RadixIPLookup6::add_route(const IPRoute &route, bool set, IPRoute *old_route, Er
 }
 
 int
-RadixIPLookup6::remove_route(const IPRoute& route, IPRoute* old_route, ErrorHandler*)
+RadixIPLookup9::remove_route(const IPRoute& route, IPRoute* old_route, ErrorHandler*)
 {
     int last_key;
     if (route.mask) {
 	uint32_t addr = ntohl(route.addr.addr());
 	uint32_t mask = ntohl(route.mask.addr());
+	int level = 1;
 	// NB: this will never actually make changes
-	last_key = _radix->change(addr, mask, 0, false);
+	last_key = _radix->change(addr, mask, 0, false, level);
     } else
 	last_key = _default_key;
 
@@ -238,16 +258,18 @@ RadixIPLookup6::remove_route(const IPRoute& route, IPRoute* old_route, ErrorHand
     if (route.mask) {
 	uint32_t addr = ntohl(route.addr.addr());
 	uint32_t mask = ntohl(route.mask.addr());
-	(void) _radix->change(addr, mask, 0, true);
+	int level = 1;
+	(void) _radix->change(addr, mask, 0, true, level);
     } else
 	_default_key = 0;
     return 0;
 }
 
 int
-RadixIPLookup6::lookup_route(IPAddress addr, IPAddress &gw) const
+RadixIPLookup9::lookup_route(IPAddress addr, IPAddress &gw) const
 {
-    int key = Radix::lookup(_radix, _default_key, ntohl(addr.addr()));
+    int level = 1;
+    int key = Radix::lookup(_radix, _default_key, ntohl(addr.addr()), level);
     if (key) {
 	gw = _v[key - 1].gw;
 	return _v[key - 1].port;
@@ -259,4 +281,4 @@ RadixIPLookup6::lookup_route(IPAddress addr, IPAddress &gw) const
 
 CLICK_ENDDECLS
 ELEMENT_REQUIRES(IPRouteTable)
-EXPORT_ELEMENT(RadixIPLookup6)
+EXPORT_ELEMENT(RadixIPLookup9)
