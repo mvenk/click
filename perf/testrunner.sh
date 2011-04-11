@@ -19,13 +19,13 @@ n=$1
 input_prefix=$2
 conf=$3
 ip_file=$4
-echo "N=$n, Input Prefix=$input_prefix, Conf=$conf, IP File=$ip_file"
-echo "Generating click script files"
+echo "index, setup-time(s), setup-memory(kb), radix-time(s),radix-memory(kb),setup-filename,radix-filename"
 ./routingtable_replicator.sh $input_prefix $conf $ip_file
-setup_files=`cat $conf | grep -v "#" | xargs printf "$input_prefix.setup%d.click\n"`
-radix_files=`cat $conf | grep -v "#" | xargs printf "$input_prefix.radix%d.click\n"`
-for j in $setup_files $radix_files
+elements=`cat $conf | grep -v "#"`
+for k in $elements
 do
+    # Run the setup file.
+    j="$input_prefix.setup$k.click"
     >$j.out
 
     for i in $(seq 1 $n);
@@ -34,6 +34,21 @@ do
 	/usr/bin/time -v  click $j &>> $j.out
     done
     
-    echo "Mean times for ${j}"
-    ./mean.sh $j.out
+    setup_mean_time=`cat $j.out| grep "wall clock" | egrep -o "[0-9]+\.[0-9]+"  | ./mean`
+    setup_mean_memory=`cat $j.out| grep "Maximum resident" | egrep -o "[0-9]+" | ./mean`
+
+    # Run the radix file.
+    j="$input_prefix.radix$k.click"
+    >$j.out
+
+    for i in $(seq 1 $n);
+    do
+	echo "==Run ${i}==">> $j.out
+	/usr/bin/time -v  click $j &>> $j.out
+    done
+    
+    radix_mean_time=`cat $j.out| grep "wall clock" | egrep -o "[0-9]+\.[0-9]+"  | ./mean`
+    radix_mean_memory=`cat $j.out| grep "Maximum resident" | egrep -o "[0-9]+" | ./mean`
+   
+    echo "${k}, $setup_mean_time, $setup_mean_memory, $radix_mean_time, $radix_mean_memory, $input_prefix.setup${k}.click, $input_prefix.radix${k}.click"
 done
