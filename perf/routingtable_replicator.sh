@@ -23,8 +23,9 @@ ip_file=$3
 elements=`cat $conf | grep -v "#"`
 for j in $elements
   do
-    # We don't want to overwrite the radix1.click file
+    # We don't want to overwrite the radix1.click file, just change the input file.
     if [ $input_prefix.radix$j.click == $input_file ]; then
+	sed -i -e "s/FromIPSummaryDump([[:punct:]|[:alnum:]]*,STOP true)/FromIPSummaryDump(\"$ip_file\",STOP true)/g" "$input_file"
 	continue
     fi
 	
