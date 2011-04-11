@@ -8,7 +8,7 @@ def hton(add):
     return ip
 
 def get_ip():
-    for ip in range(1, 2**20):
+    for ip in range(0, 2**20):
         yield hton(ip << 12)
 
 print "ControlSocket(TCP, 4444);"

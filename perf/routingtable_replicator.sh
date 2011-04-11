@@ -18,8 +18,8 @@ input_file="${input_prefix}.radix1.click"
 conf=$2
 ip_file=$3
 
-echo "Input Prefix = $input_prefix, Conf=$conf, IP File=$ip_file"
-echo "Generating Files"
+#echo "Input Prefix = $input_prefix, Conf=$conf, IP File=$ip_file"
+#echo "Generating Files"
 elements=`cat $conf | grep -v "#"`
 for j in $elements
   do
