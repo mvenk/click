@@ -11,7 +11,7 @@ def hton(add):
     return ip
 
 def get_ip():
-    for ip in range(0, 2**2):
+    for ip in range(0, 2**20):
         yield hton(ip << 12)
 
 for ip in get_ip():
