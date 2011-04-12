@@ -26,9 +26,7 @@
 #include <click/error.hh>
 #include <click/glue.hh>
 #include <click/straccum.hh>
-#include <click/allocchunk.hh>
 #include "radixiplookup6.hh"
-
 CLICK_DECLS
 
 class RadixIPLookup6::Radix { public:
@@ -55,14 +53,12 @@ class RadixIPLookup6::Radix { public:
     int _n;
     int _nchildren;
     int * _superchildren;
-    static AllocChunk *_chunk = new AllocChunk(144,4096);
-    static int i=1;
     struct Child {
 	int key;
 	Radix *child;
     } _children[0];    
     
-    Radix()                     { }
+    Radix()			{ }
     ~Radix()			{ }
 
     int &key_for(int i) {
@@ -84,14 +80,7 @@ RadixIPLookup6::Radix*
 RadixIPLookup6::Radix::make_radix(int bitshift, int n)
 {
     int size = sizeof(Radix) + n * sizeof(Child);
-    Radix* r;
-    // allocchunk currently does not allow for variable sized chunks.
-    // so the allocchunk is not used for the first level,
-    // it is used for all subsequent levels since they are of the same size.
-    if(bitshift == 24)
-	r = (Radix*)new unsigned char[size];
-    else
-	r= _chunk.alloc();
+    Radix* r = (Radix*)memalign(64,size);
     if(r)
 	{
 	    r->_superchildren = (int *)new unsigned char[(n - 2) * sizeof(int)];
@@ -125,7 +114,7 @@ RadixIPLookup6::Radix::change(uint32_t addr, uint32_t mask, int key, bool set)
     // check if change only affects children
     if (mask & ((1U << _bitshift) - 1)) {
 	if (!_children[i1].child
-	    && (_children[i1].child = make_radix(_bitshift - 4, 16)))
+	    && (_children[i1].child = make_radix(_bitshift - 3, 8)))
 	    ++_nchildren;
 	if (_children[i1].child)
 	    return _children[i1].child->change(addr, mask, key, set);

@@ -26,7 +26,7 @@
 #include <click/glue.hh>
 #include <click/straccum.hh>
 #include "radixiplookup7.hh"
-#include <stdio.h>
+
 CLICK_DECLS
 
 class RadixIPLookup7::Radix { public:
@@ -42,10 +42,8 @@ class RadixIPLookup7::Radix { public:
 	    const Child &c = r->_children[i1];
 	    if (c.key)
 		cur = c.key;
-	    int prefix_length = 32 - bitshift(level);
-	    printf("\n%d",prefix_length);
-	    r = c.child;
-	    level++;
+	        r = c.child;
+	        level++;
 	}
 	return cur;
     }
