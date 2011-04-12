@@ -9,7 +9,7 @@ def hton(add):
 
 def get_ip():
     import random
-    for ip in range(1, 5*1000000):
+    for ip in range(0, 5*1000000):
         yield hton(random.randint(1, 2**20-1)<<12)
 
 print "!data ip_dst"
