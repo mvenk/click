@@ -27,6 +27,7 @@
 #include <click/straccum.hh>
 #include <click/allocchunk.hh>
 #include "radixiplookup9.hh"
+#include <stdio.h>
 
 CLICK_DECLS
 
@@ -44,6 +45,7 @@ class RadixIPLookup9::Radix { public:
 	    if (c.key)
 		cur = c.key;
 	    r = c.child;
+	    level++;
 	}
 	return cur;
     }
@@ -64,7 +66,8 @@ class RadixIPLookup9::Radix { public:
 	if (i >= n)
 	    return _children[i - n].key;
 	else {
-	    int *x = reinterpret_cast<int *>(_children + n);
+	    //  int *x = reinterpret_cast<int *>(_children + _n);
+	    int *x= _superchildren;
 	    return x[i - 2];
 	}
     }
@@ -103,10 +106,12 @@ RadixIPLookup9::Radix::make_radix(int level)
 	r = (Radix*)new unsigned char[level1_size];
     else
 	r= (Radix*)AllocChunk::Instance()->alloc();
+    
     if(r)
 	{
 	    r->_superchildren = (int *)new unsigned char[(n - 2) * sizeof(int)];
 	    if (r->_superchildren) {
+		memset(r->_children, 0, n * sizeof(Child));
 		memset(r->_superchildren,0,(n - 2) * sizeof(int));
 		return r;
 	    }
@@ -165,14 +170,14 @@ RadixIPLookup9::RadixIPLookup9()
     : _vfree(-1), _default_key(0), _radix(Radix::make_radix(1))
 {
     // the number of children = 2^braching factor which is defined by lglvln
-    int num_children = 1<<lglvln;
-    int leveln_size = sizeof(Radix) + num_children * (sizeof(int*) + sizeof(int)); 
+    //int num_children = 1<<lglvln;
+    //int leveln_size = sizeof(Radix) + num_children * (sizeof(int*) + sizeof(int)); 
     AllocChunk::Instance()->create(260,4096);
 }
 
 RadixIPLookup9::~RadixIPLookup9()
 {
-    AllocChunk::Instance()->free_all();
+    //AllocChunk::Instance()->free_all();
 }
 
 
