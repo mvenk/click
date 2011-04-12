@@ -26,7 +26,7 @@
 #include <click/glue.hh>
 #include <click/straccum.hh>
 #include "radixiplookup7.hh"
-#include <stdio.h>
+
 CLICK_DECLS
 
 class RadixIPLookup7::Radix { public:
