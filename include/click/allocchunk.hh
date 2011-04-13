@@ -19,6 +19,7 @@ private:
   int blocks_left;
   int size;
   int multiple;
+  int allotted;
   struct block_list *head;
   struct block_list *tail;
   int _is_created;

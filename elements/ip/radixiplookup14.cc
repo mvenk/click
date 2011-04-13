@@ -102,21 +102,30 @@ RadixIPLookup14::Radix::make_radix(int level)
     // allocchunk currently does not allow for variable sized chunks.
     // so the allocchunk is not used for the first level,
     // it is used for all subsequent levels since they are of the same size.
-    if(level == 1)
+    if(level == 1) {
 	r = (Radix*)new unsigned char[level1_size];
-    else
-	r= (Radix*)AllocChunk::Instance()->alloc();
+    }
+    else {
+	r = (Radix*)AllocChunk::Instance()->alloc();
+	//r = (Radix*)new unsigned char[level1_size];
+	assert(r);
+    }
     
-    if(r)
-	{
+    if(r) {
+	    // We have only allotted a pointer to the array of
+	    // superchildren. Now we allot space for all the 
+	    // superchildren
+	    memset(r, 0, level1_size);
 	    r->_superchildren = (int *)new unsigned char[(n - 2) * sizeof(int)];
-	    if (r->_superchildren) {
-		memset(r->_children, 0, n * sizeof(Child));
-		memset(r->_superchildren,0,(n - 2) * sizeof(int));
-		return r;
-	    }
-	} 
+	    assert(r->_superchildren);
+	    memset(r->_children, 0, n * sizeof(Child));
+	    memset(r->_superchildren,0,(n - 2) * sizeof(int));
+	    return r;
+    } 
+    else {
 	return 0;
+    }
+
 }
 
 void
@@ -175,7 +184,7 @@ RadixIPLookup14::RadixIPLookup14()
 {
     // the number of children = 2^braching factor which is defined by lglvln
     int num_children = 1<<lglvln;
-    int leveln_size = sizeof(Radix) + num_children * (sizeof(int*) + sizeof(int)); 
+    int leveln_size = sizeof(int*) + num_children * (sizeof(RadixIPLookup14::Radix::Child)); 
     AllocChunk::Instance()->create(leveln_size,4096);
 }
 

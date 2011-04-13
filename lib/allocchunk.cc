@@ -24,6 +24,7 @@ void AllocChunk :: create(int size,int multiple)
 {
   this->size = size;
   this->multiple = multiple; 
+  this->allotted = 0;
   head = 0; 
   tail = 0;
 }
@@ -60,6 +61,7 @@ void * AllocChunk :: alloc(void) {
   block = (void *) tail->node.block;
   tail->node.block += size;
   tail->node.blocks_left--;
+  allotted += size;
   return block;
 }
 
