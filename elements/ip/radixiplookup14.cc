@@ -122,7 +122,11 @@ RadixIPLookup14::Radix::make_radix(int level)
 void
 RadixIPLookup14::Radix::free_radix(Radix* r, int level)
 {
-
+    int n = nbuckets(level);    
+    for (int i = 0; i < n; i++)
+	if (r->_children[i].child)
+	    free_radix(r->_children[i].child, level+1);
+    delete[] (unsigned char *)r->_superchildren;
 }
 
 int
@@ -170,14 +174,14 @@ RadixIPLookup14::RadixIPLookup14()
     : _vfree(-1), _default_key(0), _radix(Radix::make_radix(1))
 {
     // the number of children = 2^braching factor which is defined by lglvln
-    //int num_children = 1<<lglvln;
-    //int leveln_size = sizeof(Radix) + num_children * (sizeof(int*) + sizeof(int)); 
-    AllocChunk::Instance()->create(260,4096);
+    int num_children = 1<<lglvln;
+    int leveln_size = sizeof(Radix) + num_children * (sizeof(int*) + sizeof(int)); 
+    AllocChunk::Instance()->create(leveln_size,4096);
 }
 
 RadixIPLookup14::~RadixIPLookup14()
 {
-    //AllocChunk::Instance()->free_all();
+
 }
 
 
@@ -187,6 +191,8 @@ RadixIPLookup14::cleanup(CleanupStage)
     int level = 1;
     _v.clear();
     Radix::free_radix(_radix, level);
+    AllocChunk::Instance()->free_all();
+    delete[] (unsigned char*)_radix;
     _radix = 0;
 }
 
