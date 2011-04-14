@@ -71,6 +71,10 @@ RadixIPLookup13		Branching factor of 2^12 at first level and
 			removed. Bitshift and nbuckets are calculated
 			with the help of a static array.
 
+RadixIPLookup14		Branching factor of 2^12 at first level and
+			2^5 after that. Derivable fields
+			removed. Fields allocated using custom allocator.
+
 RadixIPLookup15		Branching factor of 2^16 at first level and
 			2^5 after that. Derivable fields
 			removed. Bitshift and nbuckets are calculated
