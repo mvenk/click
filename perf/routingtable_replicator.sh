@@ -1,15 +1,15 @@
 #!/bin/bash
 # the input is the prefix of the routing table file
 # Usage:
-# ./routingtable_replicator.sh <input_prefix> <conf> <ip_file>
+# ./routingtable_replicator.sh <input_prefix> <conf> <dump_file>
 # input_pref = The prefix from which the radix1 click file is
 #	       derived
 # conf	     = Configuration file which contains elements to be executed
-# ip_file    = File containing input ip routes
+# dump_file    = File containing input ip routes
 
 if [ $# -ne 3 ]; then
     echo "Usage: "
-    echo "$0 <input_prefix> <conf> <ip_file>"
+    echo "$0 <input_prefix> <conf> <dump_file>"
     exit
 fi
 

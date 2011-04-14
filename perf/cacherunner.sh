@@ -1,16 +1,16 @@
 #!/bin/bash
 # Usage
-# ./cacherunner.sh <input_prefix> <conf> <ip_file>
+# ./cacherunner.sh <input_prefix> <conf> <dump_file>
 # 
 # input_prefix = the prefix of the radix1.click file which
 #		 should be used
 # conf	       = configuration file which specified the radix
 #		 elements to be used
-# ip_file      = The input IP dump file
+# dump_file      = The input IP dump file
 
 if [ $# -ne 3 ]; then
     echo "Usage: "
-    echo "$0 <input_prefix> <conf> <ip_file>"
+    echo "$0 <input_prefix> <conf> <dump_file>"
     exit
 fi
 

@@ -1,17 +1,17 @@
 #!/bin/bash
 # Usage:
-# ./testrunner.sh <n> <input_prefix> <conf> <ip_file>
+# ./testrunner.sh <n> <input_prefix> <conf> <dump_file>
 # 
 # n		= number of times the test should be run
 # input_prefix  = the prefix of the radix1.click file which 
 #		  which should be used
 # conf		= configuration file which specifies the radix
 #		  elements to be used
-# ip_file	= The input IP dump file
+# dump_file	= The input dump file
 
 if [ $# -ne 4 ]; then
     echo "Usage: "
-    echo "$0 <n> <input_prefix> <conf> <ip_file>"
+    echo "$0 <n> <input_prefix> <conf> <dump_file>"
     exit
 fi
 
