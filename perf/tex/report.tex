@@ -16,16 +16,39 @@
 }
 \title{Cache Conscious Radix Tree Design}
 \maketitle
+\newcounter{hyp-count}
+\addtocounter{hyp-count}{1}
+\newcommand{\hypothesis}[1]{\paragraph{Hypothesis \arabic{hyp-count}:}
+  \textsl{#1} \addtocounter{hyp-count}{1}}
 \section{ABSTRACT}
 \section{INTRODUCTION}
 \section{RELATED WORK}
 \section{EVALUATION}
 
 \subsection{Changing Branching Factors}
+
+\hypothesis{For routing tables, which are dominated by longer prefixes, a
+higher level-1 branching factor, will lead to lower cache misses.} 
+
 \subsection{Using a Custom Allocator}
+\hypothesis{Ensuring that all Radix nodes are allocated from a
+  large contigous block of memory, will lead to lower cache misses.}
+
 \subsection{Removing Derivable Fields}
+\hypothesis{Removing any derivable fields from the Radix node, will
+  lead to lower cache misses}
+
 \subsection{Using a Static Lookup Table}
+\hypothesis{Using a static array to lookup the values of derivable
+  fields will cause an improvement in performance}
+
 \subsection{Prefetching Child Nodes}
+\hypothesis{Once we know the next child node which is going to be
+  accessed by the lookup, using software prefetch will help us reduce
+  cache misses}
+
+\subsection{Skip Nodes}
+\subsection{Detecting Null Children With Bit Value}
 \subsection{Memalign}
 
 \section{CONCLUSION}
