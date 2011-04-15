@@ -145,4 +145,11 @@ RadixIPLookup14		Branching factor of 2^12 at first level and
 RadixIPLookup15		Branching factor of 2^16 at first level and
 			2^5 after that. Derivable fields
 			removed. Bitshift and nbuckets are calculated
-			with the hlep of a static array.
+			with the help of a static array.
+
+RadixIPLookup16		Branching factor of 2^12 at first level and
+			2^5 after that. Derivable fields
+			removed. Bitshift and nbuckets are calculated
+			with the help of a static array. Uses intel
+			specific software prefetch instruction
+			prefetcht0 to prefetch child nodes during lookup.
