@@ -60,16 +60,15 @@ class RadixIPLookup18::Radix { public:
     Radix()			{ }
     ~Radix()			{ }
 
-    int &key_for(int i, int level) {
+    int &key_for(int i, int level,HashMap<Radix*,int*>& super_map) {
 	int n = nbuckets(level);
 	assert(i >= 2 && i < n * 2);
 	if (i >= n)
 	    return _children[i - n].key;
 	else {
 	    //  int *x = reinterpret_cast<int *>(_children + _n);
-	    //int *x= _superchildren;
-	    //return x[i - 2];
-	    return _children[0].key;
+	    int *x= super_map[this];
+	    return x[i - 2];
 	}
     }
 
@@ -121,7 +120,7 @@ RadixIPLookup18::Radix::make_radix(int level, HashMap<Radix*,int*> & super_map)
 	    assert(superchildren);
 	    memset(r->_children, 0, n * sizeof(Child));
 	    memset(superchildren,0,(n - 2) * sizeof(int));
-	    super_map[r]=superchildren;
+	    super_map.insert(r,superchildren);
 	    return r;
     } 
     else {
@@ -133,17 +132,12 @@ RadixIPLookup18::Radix::make_radix(int level, HashMap<Radix*,int*> & super_map)
 void
 RadixIPLookup18::Radix::free_radix(Radix* r, int level)
 {
-    int n = nbuckets(level);    
-    for (int i = 0; i < n; i++)
-	if (r->_children[i].child)
-	    free_radix(r->_children[i].child, level+1);
-    //delete[] (unsigned char *)r->_superchildren;
+    // Nothing to be done
 }
 
 int
 RadixIPLookup18::Radix::change(uint32_t addr, uint32_t mask, int key, bool set, int level, HashMap<Radix*,int*>& super_map )
 {
-    printf("\n%d",(int*)this);
     int shift = bitshift(level);
     int n = nbuckets(level);
     int i1 = (addr >> shift) & (n - 1);
@@ -165,18 +159,18 @@ RadixIPLookup18::Radix::change(uint32_t addr, uint32_t mask, int key, bool set, 
     int nmasked = n - ((mask >> shift) & (n - 1));
     for (int x = nmasked; x > 1; x /= 2)
 	i1 /= 2;
-    int replace_key = key_for(i1, level), prev_key = replace_key;
-    if (prev_key && i1 > 3 && key_for(i1 / 2, level) == prev_key)
+    int replace_key = key_for(i1, level,super_map), prev_key = replace_key;
+    if (prev_key && i1 > 3 && key_for(i1 / 2, level,super_map) == prev_key)
 	prev_key = 0;
 
     // replace previous key with current key, if appropriate
     if (!key && i1 > 3)
-	key = key_for(i1 / 2, level);
+	key = key_for(i1 / 2, level,super_map);
     if (prev_key != key && (!prev_key || set)) {
 	for (nmasked = 1; i1 < n * 2; i1 *= 2, nmasked *= 2)
 	    for (int x = i1; x < i1 + nmasked; ++x)
-		if (key_for(x, level) == replace_key)
-		    key_for(x, level) = key;
+		if (key_for(x, level,super_map) == replace_key)
+		    key_for(x, level,super_map) = key;
     }
     return prev_key;
 }

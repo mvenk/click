@@ -1,6 +1,6 @@
 %script
 
-for rtable in RadixIPLookup RadixIPLookup2 RadixIPLookup3 RadixIPLookup4 RadixIPLookup5 RadixIPLookup6 RadixIPLookup7 RadixIPLookup8 RadixIPLookup9 RadixIPLookup10 RadixIPLookup11 RadixIPLookup12 DirectIPLookup RangeIPLookup LinearIPLookup; do
+for rtable in RadixIPLookup RadixIPLookup2 RadixIPLookup3 RadixIPLookup4 RadixIPLookup5 RadixIPLookup6 RadixIPLookup7 RadixIPLookup8 RadixIPLookup9 RadixIPLookup10 RadixIPLookup11 RadixIPLookup12 RadixIPLookup13 RadixIPLookup14 RadixIPLookup15 RadixIPLookup16 RadixIPLookup18 DirectIPLookup RangeIPLookup LinearIPLookup; do
 	click -e "
 i :: Idle
 	-> r :: $rtable()
@@ -37,6 +37,7 @@ DriverManager(
 done
 
 %expect stdout
+
 0 1.0.0.1
 1 2.0.0.2
 1 2.0.0.2
@@ -50,6 +51,70 @@ done
 0 7.0.0.7
 -1
 
+0 1.0.0.1
+1 2.0.0.2
+1 2.0.0.2
+2 3.0.0.3
+2 3.0.0.3
+2 3.0.0.3
+0 4.0.0.4
+0 5.0.0.5
+0 4.0.0.4
+0 4.0.0.4
+0 7.0.0.7
+-1
+
+0 1.0.0.1
+1 2.0.0.2
+1 2.0.0.2
+2 3.0.0.3
+2 3.0.0.3
+2 3.0.0.3
+0 4.0.0.4
+0 5.0.0.5
+0 4.0.0.4
+0 4.0.0.4
+0 7.0.0.7
+-1
+
+0 1.0.0.1
+1 2.0.0.2
+1 2.0.0.2
+2 3.0.0.3
+2 3.0.0.3
+2 3.0.0.3
+0 4.0.0.4
+0 5.0.0.5
+0 4.0.0.4
+0 4.0.0.4
+0 7.0.0.7
+-1
+
+0 1.0.0.1
+1 2.0.0.2
+1 2.0.0.2
+2 3.0.0.3
+2 3.0.0.3
+2 3.0.0.3
+0 4.0.0.4
+0 5.0.0.5
+0 4.0.0.4
+0 4.0.0.4
+0 7.0.0.7
+-1
+
+0 1.0.0.1
+1 2.0.0.2
+1 2.0.0.2
+2 3.0.0.3
+2 3.0.0.3
+2 3.0.0.3
+0 4.0.0.4
+0 5.0.0.5
+0 4.0.0.4
+0 4.0.0.4
+0 7.0.0.7
+-1
 
 0 1.0.0.1
 1 2.0.0.2
@@ -250,7 +315,11 @@ done
 {{ *}}conflict with existing route '18.16.0.0/12 4.0.0.4 0'
 {{ *}}conflict with existing route '18.16.0.0/12 4.0.0.4 0'
 {{ *}}conflict with existing route '18.16.0.0/12 4.0.0.4 0'
-
+{{ *}}conflict with existing route '18.16.0.0/12 4.0.0.4 0'
+{{ *}}conflict with existing route '18.16.0.0/12 4.0.0.4 0'
+{{ *}}conflict with existing route '18.16.0.0/12 4.0.0.4 0'
+{{ *}}conflict with existing route '18.16.0.0/12 4.0.0.4 0'
+{{ *}}conflict with existing route '18.16.0.0/12 4.0.0.4 0'
 %ignorex
 !.*
 While.*:
