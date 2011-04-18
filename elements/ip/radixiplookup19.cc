@@ -73,27 +73,14 @@ RadixIPLookup19::Radix::key_for(int i, int level) {
     }
 }
     
-int &
-RadixIPLookup19::Radix::lookup_key_for(int i, int level) {
-    int n = _nbuckets[level];
-    assert(i >= 2 && i < n * 2);
-    if (i >= n)
-	return _children[i - n].lookup_key;
-    else {
-	int *x = reinterpret_cast<int *>(_children + 2*n-2);
-	return x[i - 2];
-    }
-
-}
-
 
 int 
 RadixIPLookup19::Radix::lookup(const Radix *r, int cur, uint32_t addr, int level) {
 	while (r) {
 	    int i1 = (addr >> _bitshift[level]) & (_nbuckets[level] - 1);
 	    const Child &c = r->_children[i1];	   
-	    if (c.lookup_key)
-		cur = c.lookup_key;
+	    if (c.key)
+		cur = c.key;
 	    r = c.child;
 	    level++;
 	}
@@ -117,8 +104,8 @@ RadixIPLookup19::Radix::make_radix(int level)
     int n = _nbuckets[level];
     // We allocate more for the superchildren as we now have the 
     // lookup keys to worry about as well.
-    if (Radix* r = (Radix*) new unsigned char[sizeof(Radix) + n * sizeof(Child) + 2 * (n - 2) * sizeof(int)]) {
-	memset(r->_children, 0, n * sizeof(Child) + 2 * (n - 2) * sizeof(int));
+    if (Radix* r = (Radix*) new unsigned char[sizeof(Radix) + n * sizeof(Child) + (n - 2) * sizeof(int)]) {
+	memset(r->_children, 0, n * sizeof(Child) + (n - 2) * sizeof(int));
 	return r;
     } else
 	return 0;
@@ -165,15 +152,12 @@ RadixIPLookup19::Radix::change(uint32_t addr, uint32_t mask, int key, int lookup
     // replace previous key with current key, if appropriate
     if (!key && i1 > 3)
 	key = key_for(i1 / 2, level);
-    if (!lookup_key && i1 > 3) 
-	lookup_key = lookup_key_for(i1 / 2, level);
 
     if (prev_key != key && (!prev_key || set)) {
 	for (nmasked = 1; i1 < n * 2; i1 *= 2, nmasked *= 2)
 	    for (int x = i1; x < i1 + nmasked; ++x) {
 		if (key_for(x, level) == replace_key) {
-		    key_for(x, level) = key;		    
-		    lookup_key_for(x, level) = lookup_key;
+		    key_for(x, level) = key;		    		    
 		}
 	    }
 	
@@ -295,10 +279,10 @@ RadixIPLookup19::lookup_route(IPAddress addr, IPAddress &gw) const
 {
     int level = 0;
     //int key = Radix::lookup(_radix, _default_key, ntohl(addr.addr()), level);
-    int key = Radix::lookup(_radix, 0, ntohl(addr.addr()), level);
+    int key = Radix::lookup(_radix, _default_key, ntohl(addr.addr()), level);
     if (key) {
-	gw = _lookup[key - 1].gw;
-	return _lookup[key - 1].port;
+	gw = _v[key - 1].gw;
+	return _v[key - 1].port;
     } else {
 	gw = 0;
 	return -1;
