@@ -153,3 +153,17 @@ RadixIPLookup16		Branching factor of 2^12 at first level and
 			with the help of a static array. Uses intel
 			specific software prefetch instruction
 			prefetcht0 to prefetch child nodes during lookup.
+
+RadixIPLookup18 	Uses custom allocator. Super children are
+			indexed with the help of a separate hash
+			table.
+
+RadixIPLookup19		Branching factor of 2^12 at first level and
+			2^5 after that. Derivable fields
+			removed. Bitshift and nbuckets are calculated
+			with the help of a static array. The top 4
+			bits of the "key" index into a different
+			(most likely) smaller "lookup table" which
+			maintains only unique "gw" and "port"
+			combinations. This saves cache misses as we
+			don't need to access the large "_v" table.
