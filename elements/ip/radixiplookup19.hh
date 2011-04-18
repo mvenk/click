@@ -94,6 +94,21 @@ class RadixIPLookup19 : public IPRouteTable { public:
 
   private:
 
+    static inline int32_t combine_key(int32_t key, int32_t lookup_key) {
+	assert(lookup_key <= 0xff);
+	assert(key <= 0x00ffffff);
+	return ((lookup_key) << 24 | key);	
+    }
+
+    static inline int32_t get_key(int32_t comb) {
+	return (comb & 0x00ffffff);
+    }
+
+    static inline int32_t get_lookup_key(int32_t comb) {
+	return ((comb & 0xff000000) >> 24);
+    }
+
+
     class Radix;
 
     // Simple routing table

@@ -36,14 +36,14 @@ class RadixIPLookup19::Radix { public:
     static int lookup(const Radix *r, int cur, uint32_t addr, int level);
     
 
-    int change(uint32_t addr, uint32_t mask, int key, int lookup_key, bool set, int level);
+    int change(uint32_t addr, uint32_t mask, int key, bool set, int level);
     int &key_for(int i, int level);
-    int &lookup_key_for(int i, int level);
+    
   private:
+
 
     struct Child {
 	int key;
-	int lookup_key;
 	Radix *child;
     } _children[0];
 
@@ -122,7 +122,7 @@ RadixIPLookup19::Radix::free_radix(Radix* r, int level)
 }
 
 int
-RadixIPLookup19::Radix::change(uint32_t addr, uint32_t mask, int key, int lookup_key, bool set, int level)
+RadixIPLookup19::Radix::change(uint32_t addr, uint32_t mask, int key, bool set, int level)
 {
     int shift = _bitshift[level];
     int n = _nbuckets[level];
@@ -135,7 +135,7 @@ RadixIPLookup19::Radix::change(uint32_t addr, uint32_t mask, int key, int lookup
 	    ;
 	}
 	if (_children[i1].child)
-	    return _children[i1].child->change(addr, mask, key, lookup_key, set, level+1);
+	    return _children[i1].child->change(addr, mask, key, set, level+1);
 	else
 	    return 0;
     }
@@ -151,7 +151,7 @@ RadixIPLookup19::Radix::change(uint32_t addr, uint32_t mask, int key, int lookup
 
     // replace previous key with current key, if appropriate
     if (!key && i1 > 3)
-	key = key_for(i1 / 2, level);
+	key = (key_for(i1 / 2, level));
 
     if (prev_key != key && (!prev_key || set)) {
 	for (nmasked = 1; i1 < n * 2; i1 *= 2, nmasked *= 2)
@@ -211,11 +211,13 @@ RadixIPLookup19::add_route(const IPRoute &route, bool set, IPRoute *old_route, E
 	uint32_t addr = ntohl(route.addr.addr());
 	uint32_t mask = ntohl(route.mask.addr());
 	int level = 0;
-	last_key = _radix->change(addr, mask, found + 1, lookup_key, set, level);
+	last_key = _radix->change(addr, mask, combine_key(found + 1, lookup_key), set, level);
+	// The key returned by change is the combined key, we need only the _v key.
+	last_key = get_key(last_key);
     } else {
-	last_key = _default_key;
+	last_key = get_key(_default_key);
 	if (!last_key || set)
-	    _default_key = found + 1;
+	    _default_key = combine_key(found + 1, lookup_key);
     }
 
     if (last_key && old_route)
@@ -253,9 +255,9 @@ RadixIPLookup19::remove_route(const IPRoute& route, IPRoute* old_route, ErrorHan
 	uint32_t mask = ntohl(route.mask.addr());
 	int level = 0;
 	// NB: this will never actually make changes
-	last_key = _radix->change(addr, mask, 0, 0, false, level);
+	last_key = get_key(_radix->change(addr, mask, 0, false, level));
     } else
-	last_key = _default_key;
+	last_key = get_key(_default_key);
 
     if (last_key && old_route)
 	*old_route = _v[last_key - 1];
@@ -268,7 +270,7 @@ RadixIPLookup19::remove_route(const IPRoute& route, IPRoute* old_route, ErrorHan
 	uint32_t addr = ntohl(route.addr.addr());
 	uint32_t mask = ntohl(route.mask.addr());
 	int level = 0;
-	(void) _radix->change(addr, mask, 0, 0, true, level);
+	(void) _radix->change(addr, mask, 0, true, level);
     } else
 	_default_key = 0;
     return 0;
@@ -277,12 +279,12 @@ RadixIPLookup19::remove_route(const IPRoute& route, IPRoute* old_route, ErrorHan
 int
 RadixIPLookup19::lookup_route(IPAddress addr, IPAddress &gw) const
 {
-    int level = 0;
-    //int key = Radix::lookup(_radix, _default_key, ntohl(addr.addr()), level);
+    int level = 0;    
     int key = Radix::lookup(_radix, _default_key, ntohl(addr.addr()), level);
-    if (key) {
-	gw = _v[key - 1].gw;
-	return _v[key - 1].port;
+    int lookup_key = get_lookup_key(key);
+    if (lookup_key) {
+	gw = _lookup[lookup_key - 1].gw;
+	return _lookup[lookup_key - 1].port;
     } else {
 	gw = 0;
 	return -1;
