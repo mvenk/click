@@ -33,25 +33,18 @@ class RadixIPLookup19::Radix { public:
 
     static Radix *make_radix(int level);
     static void free_radix(Radix *r, int level);
+    static int lookup(const Radix *r, int cur, uint32_t addr, int level);
+
 
     int change(uint32_t addr, uint32_t mask, int key, int lookup_key, bool set, int level);
 
-    static inline int lookup(const Radix *r, int cur, uint32_t addr, int level) {
-	while (r) {
-	    int i1 = (addr >> _bitshift[level]) & (_nbuckets[level] - 1);
-	    const Child &c = r->_children[i1];
-	    if (c.key)
-		cur = c.key;
-	    r = c.child;
-	    level++;
-	}
-	return cur;
-    }
+
 
   private:
 
     struct Child {
 	int key;
+	int lookup_key;
 	Radix *child;
     } _children[0];
 
@@ -65,8 +58,20 @@ class RadixIPLookup19::Radix { public:
 	    return _children[i - n].key;
 	else {
 	    int *x = reinterpret_cast<int *>(_children + n);
-	    return x[i - 2];
+	    return x[2*(i - 2)];
 	}
+    }
+    
+    int &lookup_key_for(int i, int level) {
+	int n = _nbuckets[level];
+	assert(i >= 2 && i < n * 2);
+	if (i >= n)
+	    return _children[i - n].lookup_key;
+	else {
+	    int *x = reinterpret_cast<int *>(_children + n);
+	    return x[2*(i - 2)+1];
+	}
+
     }
        
     static const int _bitshift [5];
@@ -78,6 +83,20 @@ class RadixIPLookup19::Radix { public:
 
 const int RadixIPLookup19::Radix::_bitshift [5] = {20, 15, 10, 5, 0};
 const int RadixIPLookup19::Radix::_nbuckets [5] = {4096, 32, 32, 32, 32};
+
+int 
+RadixIPLookup19::Radix::lookup(const Radix *r, int cur, uint32_t addr, int level) {
+	while (r) {
+	    int i1 = (addr >> _bitshift[level]) & (_nbuckets[level] - 1);
+	    const Child &c = r->_children[i1];	   
+	    if (c.lookup_key)
+		cur = c.lookup_key;
+	    r = c.child;
+	    level++;
+	}
+	return cur;
+    }
+
 
 int
 RadixIPLookup19::find_lookup_key(IPAddress gw, int32_t port) {
@@ -93,8 +112,10 @@ RadixIPLookup19::Radix*
 RadixIPLookup19::Radix::make_radix(int level)
 {
     int n = _nbuckets[level];
-    if (Radix* r = (Radix*) new unsigned char[sizeof(Radix) + n * sizeof(Child) + (n - 2) * sizeof(int)]) {
-	memset(r->_children, 0, n * sizeof(Child) + (n - 2) * sizeof(int));
+    // We allocate more for the superchildren as we now have the 
+    // lookup keys to worry about as well.
+    if (Radix* r = (Radix*) new unsigned char[sizeof(Radix) + n * sizeof(Child) + 2 * (n - 2) * sizeof(int)]) {
+	memset(r->_children, 0, n * sizeof(Child) + 2 * (n - 2) * sizeof(int));
 	return r;
     } else
 	return 0;
@@ -136,16 +157,23 @@ RadixIPLookup19::Radix::change(uint32_t addr, uint32_t mask, int key, int lookup
 	i1 /= 2;
     int replace_key = key_for(i1, level), prev_key = replace_key;
     if (prev_key && i1 > 3 && key_for(i1 / 2, level) == prev_key)
-	prev_key = 0;
+     	prev_key = 0;
 
     // replace previous key with current key, if appropriate
     if (!key && i1 > 3)
 	key = key_for(i1 / 2, level);
+    if (!lookup_key && i1 > 3) 
+	lookup_key = lookup_key_for(i1 / 2, level);
+
     if (prev_key != key && (!prev_key || set)) {
 	for (nmasked = 1; i1 < n * 2; i1 *= 2, nmasked *= 2)
-	    for (int x = i1; x < i1 + nmasked; ++x)
-		if (key_for(x, level) == replace_key)
-		    key_for(x, level) = key;
+	    for (int x = i1; x < i1 + nmasked; ++x) {
+		if (key_for(x, level) == replace_key) {
+		    key_for(x, level) = key;		    
+		    lookup_key_for(x, level) = lookup_key;
+		}
+	    }
+	
     }
     return prev_key;
 }
@@ -263,10 +291,11 @@ int
 RadixIPLookup19::lookup_route(IPAddress addr, IPAddress &gw) const
 {
     int level = 0;
-    int key = Radix::lookup(_radix, _default_key, ntohl(addr.addr()), level);
+    //int key = Radix::lookup(_radix, _default_key, ntohl(addr.addr()), level);
+    int key = Radix::lookup(_radix, 0, ntohl(addr.addr()), level);
     if (key) {
-	gw = _v[key - 1].gw;
-	return _v[key - 1].port;
+	gw = _lookup[key - 1].gw;
+	return _lookup[key - 1].port;
     } else {
 	gw = 0;
 	return -1;
