@@ -66,7 +66,16 @@ class RadixIPLookup20::Radix { public:
     Radix()			{ }
     ~Radix()			{ }
 
-    int key_for(int i, int level);
+    int key_for(int i, int level) {
+	int n = _nbuckets[level];
+	assert(i >= 2 && i < n * 2);
+	if(i >= n) 
+	    return _keys[i - n].key;
+	else {
+	    return _keys[n + i - 2].key;
+	}
+    }
+
 
     Key *get_key(int i, int level) {
 	int n = _nbuckets[level];
@@ -85,15 +94,6 @@ class RadixIPLookup20::Radix { public:
 
 };
 
-int RadixIPLookup20::Radix::key_for(int i, int level) {
-	int n = _nbuckets[level];
-	assert(i >= 2 && i < n * 2);
-	if(i >= n) 
-	    return _keys[i - n].key;
-	else {
-	    return _keys[n + i - 2].key;
-	}
-    }
 
 
 const int RadixIPLookup20::Radix::_bitshift [5] = {20, 15, 10, 5, 0};
