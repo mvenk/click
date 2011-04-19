@@ -54,18 +54,17 @@ class RadixIPLookup20::Radix { public:
     }
 
   private:
-
-    Radix * _children[0];    
-    
+        
     struct Key {
 	int key:31;
 	int has_child:1;
-    }_keys[0];
-
-
+    };
+    
+    Radix **_children;
+    Key *_keys;
+    
     Radix()			{ }
     ~Radix()			{ }
-
 
     int key_for(int i, int level);
 
@@ -104,7 +103,12 @@ RadixIPLookup20::Radix*
 RadixIPLookup20::Radix::make_radix(int level) 
 {
     int n = _nbuckets[level];
-    if(Radix* r = (Radix*) new unsigned char[sizeof(Radix) + n * sizeof(Radix*) + n * sizeof(Key) + (n - 2) * sizeof(Key)]) {
+    if(Radix* r = new Radix()) {
+	unsigned char * block = new unsigned char[n * sizeof(Radix *) + n * sizeof(Key) + (n-2) * sizeof(Key)];
+	if(!block) 
+	    return 0;
+	r->_children = (Radix **) block;
+	r->_keys = (Radix::Key *) &block[n *sizeof(Radix *)];
 	memset(r->_children, 0, n * sizeof(Radix*));
 	memset(r->_keys, 0, n * sizeof(Key) + (n - 2) *sizeof(Key));
 	return r;
@@ -121,6 +125,7 @@ RadixIPLookup20::Radix::free_radix(Radix* r, int level)
     for(int i=0; i < n; i++) 
 	if(r->_children[i])
 	    free_radix(r->_children[i], level+1);
+    delete[] (unsigned char *) r->_children;
     delete[] (unsigned char *)r;
 }
 
