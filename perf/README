@@ -1,5 +1,5 @@
 The files in this directory are used to run performance related tests
-on the RadixIPLookup element. Currently there are 3 sets of tests
+on the RadixIPLookup element. Currently there are 5 sets of tests
 which can be run:
 
 1. 167k -- Uses the 167k routing table and evaluated RadixIPLookup
@@ -19,6 +19,33 @@ address space. RadixIPLookup is evaluated using a 5 million long TCP
 dump file consisting of all the IP addresses which match the routes in
 the routing table. These addresses are repeated 5 times and randomly
 shuffled. The TCP dump file is 5mshuffle.dump
+
+5. 366k -- Uses a realistic routing table obtained from the routeviews
+FIB. Contains ~ 366K routes with around 40 next hops. Evaluated using
+5 million random IP addresses (5mtest.dump)
+
+
+All the tests can be running the "make" command within the perf
+directory. 
+
+Usage:
+	make
+
+To run a specific test class you can pass that class as an argument to
+make. For example to run only the 167k tests, you would run:
+
+      make 167k
+
+Additional options include specifying the number of times the tests
+should be run and the conf file:
+
+       make 167k n=10 conf=myconf.conf
+
+The "conf" file contains the index numbers of radix elements to be
+used. For an example conf file see "default.conf". If no options are
+given make assumes that "n=10" and "conf=default.conf". The Makefile
+actually invokes another shell script called "testrunner.sh" which is
+described in the next paragraphs.
 
 The testrunner.sh file runs each one of these files using "click
 radix[1-6].click" and times the result using the "time" program. 
@@ -167,3 +194,58 @@ RadixIPLookup19		Branching factor of 2^12 at first level and
 			maintains only unique "gw" and "port"
 			combinations. This saves cache misses as we
 			don't need to access the large "_v" table.
+
+RadixIPLookup20		Branching factor of 2^12 at first level and
+			2^5 after that. Uses static array to find
+			values for _bitshift and _nbuckets. Has a
+			single bit embedded within each key called
+			"has_child" which tells whether a particular
+			radix child element has children or not. The
+			keys and radix pointers are laid out in a
+			block format instead of being interleaved.
+
+			Layout Before
+			[key | radix *, key | radix * .... ]
+
+			In RadixIPLookup20
+			
+			[key | has_key, key | has_key,  .. radix *, radix *..]
+
+RadixIPLookup21		Branching factor of 2^12 at first level and 2^5 after
+			that. Uses a skip key to avoid linear
+			branches. A linear branch is one where an
+			internal node in a tree has only one child,
+			and that child has only one child, so on all
+			the way to a leaf node.
+
+			For example:
+
+				A
+			       / \
+		              B
+		             / \
+		            C 
+		           / \
+		          D
+			
+			In the above example, A only has one child B,
+			which in turn has only one child C. D, which
+			is the only child of C, is a leaf node, hence
+			we have a linear branch all the way from A-D.
+
+			Instead of having the nodes B and C, we could
+			directly connect A to D.
+
+		          ------A
+			  |
+		          |
+		          |
+		          |
+		          D
+		
+			Whenever a key is added to be added to a Radix
+			node, we check whether it is the first node
+			being added to the radix tree. If that is the
+			case, then we directly add that key as a skip
+			key.
+  
