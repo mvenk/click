@@ -36,11 +36,15 @@ class RadixIPLookup21::Radix { public:
 
     int change(uint32_t addr, uint32_t mask, int key, bool set, int level, int *);
 
-    static inline int lookup(const Radix *r, int cur, uint32_t addr, int level) {
+    static inline int lookup(const Radix *r, int cur, uint32_t addr, int level, const Vector<IPRoute>& v) {
 	while (r) {
 	    int i1 = (addr >> bitshift(level)) & (nbuckets(level) - 1);	    
 	    if(r->_skip_key > 0) {
-		return r->_skip_key;
+		IPRoute route = v[r->_skip_key];
+		if(route.contains((IPAddress)addr))
+		    return r->_skip_key;
+		else 
+		    return cur;
 	    }
 
 	    const Child &c = r->_children[i1];
@@ -221,7 +225,7 @@ RadixIPLookup21::add_route(const IPRoute &route, bool set, IPRoute *old_route, E
 	uint32_t addr = ntohl(route.addr.addr());
 	uint32_t mask = ntohl(route.mask.addr());
 	int level = 1;
-	last_key = _radix->change(addr, mask, found + 1, set, level, 0);
+	last_key = _radix->change(addr,mask, found + 1, set, level, 0);
     } else {
 	last_key = _default_key;
 	if (!last_key || set)
@@ -283,7 +287,7 @@ int
 RadixIPLookup21::lookup_route(IPAddress addr, IPAddress &gw) const
 {
     int level = 1;
-    int key = Radix::lookup(_radix, _default_key, ntohl(addr.addr()), level);
+    int key = Radix::lookup(_radix, _default_key, ntohl(addr.addr()), level,(Vector<IPRoute>&) _v);
     if (key) {
 	gw = _v[key - 1].gw;
 	return _v[key - 1].port;
