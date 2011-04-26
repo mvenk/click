@@ -20,7 +20,7 @@ input_prefix=$2
 conf=$3
 ip_file=$4
 echo "index, setup-time(s), setup-memory(kb), radix-time(s),radix-memory(kb),setup-filename,radix-filename"
-./routingtable_replicator.sh $input_prefix $conf $ip_file
+#./routingtable_replicator.sh $input_prefix $conf $ip_file
 elements=`cat $conf | grep -v "#"`
 for k in $elements
 do
