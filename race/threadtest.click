@@ -13,7 +13,6 @@ rt :: RadixIPLookup23(
 204.221.17.0/24 12.0.1.63 1,
 204.17.221.0/24 216.140.8.59 1,
 203.34.233.0/24  1,
-4.4.4.4/0 5.5.5.5 1,
 );
 
 FromIPSummaryDump("threadtest.dump",STOP true) -> rt;
@@ -26,11 +25,30 @@ m1::Script(TYPE ACTIVE,
 write rt.remove 203.34.233.0/24 1,
 write rt.add 203.34.233.0/24 0,
 write rt.remove 203.34.233.0/24 0,
-write rt.add 203.34.233.0/24 0);
+write rt.add 203.34.233.0/24 0,
+write rt.remove 203.34.233.0/24 0,
+write rt.add 203.34.233.0/24 0,
+write rt.remove 203.34.233.0/24 0,
+write rt.add 203.34.233.0/24 0,
+write rt.remove 203.34.233.0/24 0,
+write rt.add 203.34.233.0/24 0,
+write rt.remove 203.34.233.0/24 0,
+write rt.add 203.34.233.0/24 0,
+write rt.remove 203.34.233.0/24 0,
+write rt.add 203.34.233.0/24 0,
+write rt.remove 203.34.233.0/24 0,
+write rt.add 203.34.233.0/24 0,
+write rt.remove 203.34.233.0/24 0,);
 
 m2::Script(TYPE ACTIVE,
-read rt.lookup 203.34.233.0,
-write rt.add 203.34.233.0/27 1,
-read rt.lookup 203.34.233.0);
+write rt.add 203.34.233.0/24 0,
+write rt.remove 203.34.233.0/24 0,
+write rt.add 203.34.233.0/24 0,
+write rt.remove 203.34.233.0/24 0,
+write rt.add 203.34.233.0/24 0,
+write rt.remove 203.34.233.0/24 0,
+write rt.add 203.34.233.0/24 0,
+write rt.remove 203.34.233.0/24 0,
+);
 
 StaticThreadSched(rt 2, m1 1,m2 0); 
