@@ -38,12 +38,13 @@ class RadixIPLookup16::Radix { public:
 
     static inline int lookup(const Radix *r, int cur, uint32_t addr, int level) {
 	while (r) {
+#if (__i386__ || __x86_64__ || __ia_64__)
+	    asm volatile("prefetcht0 %0" : : "m" (r->_children[0]));
+#endif
+
 	    int i1 = (addr >> _bitshift[level]) & (_nbuckets[level] - 1);
 	    const Child &c = r->_children[i1];
 
-#if __i386__ && HAVE_INTEL_CPU
-	    asm volatile("prefetcht0 %0" : : "m" (c));
-#endif
 	    if (c.key)
 		cur = c.key;
 	    r = c.child;
