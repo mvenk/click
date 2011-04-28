@@ -28,6 +28,7 @@
 #include "radixiplookup23.hh"
 #include <stdio.h>
 #include <click/timestamp.hh>
+#include <unistd.h>
 
 CLICK_DECLS
 
@@ -40,6 +41,7 @@ class RadixIPLookup23::Radix { public:
 
     static inline int lookup(const Radix *r, int cur, uint32_t addr) {
 	while (r) {
+	    usleep(30000);
 	    int i1 = (addr >> r->_bitshift) & (r->_n - 1);
 	    const Child &c = r->_children[i1];
 	    if (c.key)
@@ -173,7 +175,8 @@ int
 RadixIPLookup23::add_route(const IPRoute &route, bool set, IPRoute *old_route, ErrorHandler *)
 {
     Timestamp time_now = Timestamp::now();
-    printf("\nAdd : sec: %d msec: %d nsec: %d",time_now.sec(),time_now.msec(),time_now.nsec());
+    long int thread_id=(long int)syscall(224);
+    printf("\nStarted Add thread ID: %ld   (sec: %d  nsec: %d)",thread_id,time_now.sec(),time_now.nsec());
     int found = (_vfree < 0 ? _v.size() : _vfree), last_key;
     if (route.mask) {
 	uint32_t addr = ntohl(route.addr.addr());
@@ -210,7 +213,8 @@ int
 RadixIPLookup23::remove_route(const IPRoute& route, IPRoute* old_route, ErrorHandler*)
 {
     Timestamp time_now = Timestamp::now();
-    printf("\nRemove: sec: %d msec: %d nsec: %d",time_now.sec(),time_now.msec(),time_now.nsec());
+    long int thread_id=(long int)syscall(224);
+    printf("\nStarted Remove. thread ID: %ld  (sec:%d nsec:%d)",thread_id,time_now.sec(),time_now.nsec());
     int last_key;
     if (route.mask) {
 	uint32_t addr = ntohl(route.addr.addr());
@@ -240,8 +244,11 @@ int
 RadixIPLookup23::lookup_route(IPAddress addr, IPAddress &gw) const
 {
     Timestamp time_now = Timestamp::now();
-    printf("\nLookup: sec: %d msec: %d nsec: %d",time_now.sec(),time_now.msec(),time_now.nsec());
+    long int thread_id=(long int)syscall(224);
+    printf("\nStarted Lookup. thread ID: %ld   (sec: %d nsec: %d)",thread_id,time_now.sec(),time_now.nsec());
     int key = Radix::lookup(_radix, _default_key, ntohl(addr.addr()));
+    time_now = Timestamp::now();
+    printf("\nFinished Lookup. thread ID: %ld   (sec: %d nsec: %d)",thread_id,time_now.sec(),time_now.nsec());
     if (key) {
 	gw = _v[key - 1].gw;
 	return _v[key - 1].port;
