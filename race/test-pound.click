@@ -1,7 +1,8 @@
 Idle
- -> r :: RadixIPLookup
+ -> r :: RadixIPLookup23
  -> Idle;
 
-p :: PoundRadixIPLookup(r);
-
-DriverManager(wait 0.1, print r.table, stop);
+p0 :: PoundRadixIPLookup(r);
+p1 :: PoundRadixIPLookup(r);
+DriverManager(wait 5, print r.table, stop);
+StaticThreadSched(p0 0,p1 1);
