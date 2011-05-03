@@ -1,16 +1,16 @@
-#ifndef CLICK_POUNDRADIXIPLOOKUP_HH
-#define CLICK_POUNDRADIXIPLOOKUP_HH
+#ifndef CLICK_BASHRADIXIPLOOKUP_HH
+#define CLICK_BASHRADIXIPLOOKUP_HH
 #include <click/element.hh>
 #include <click/task.hh>
 CLICK_DECLS
 class RadixIPLookup100;
 
-class PoundRadixIPLookup : public Element { public:
+class BashRadixIPLookup : public Element { public:
 
-    PoundRadixIPLookup();
-    ~PoundRadixIPLookup();
+    BashRadixIPLookup();
+    ~BashRadixIPLookup();
 
-    const char *class_name() const	{ return "PoundRadixIPLookup"; }
+    const char *class_name() const	{ return "BashRadixIPLookup"; }
 
     int configure(Vector<String> &conf, ErrorHandler *errh);
     int initialize(ErrorHandler *errh);

@@ -1,35 +1,35 @@
 #include <click/config.h>
 #include <click/confparse.hh>
 #include <click/standard/scheduleinfo.hh>
-#include "poundradixiplookup.hh"
+#include "bashradixiplookup.hh"
 #include "radixiplookup100.hh"
 CLICK_DECLS
 
-PoundRadixIPLookup::PoundRadixIPLookup()
+BashRadixIPLookup::BashRadixIPLookup()
     : _task(this) {
 }
 
-PoundRadixIPLookup::~PoundRadixIPLookup() {
+BashRadixIPLookup::~BashRadixIPLookup() {
 }
 
 int
-PoundRadixIPLookup::configure(Vector<String> &conf, ErrorHandler *errh) {
+BashRadixIPLookup::configure(Vector<String> &conf, ErrorHandler *errh) {
     return cp_va_kparse(conf, this, errh,
 			"RADIX", cpkP+cpkM, cpElementCast, "RadixIPLookup100", &_l,
 			cpEnd);
 }
 
 int
-PoundRadixIPLookup::initialize(ErrorHandler *errh) {
+BashRadixIPLookup::initialize(ErrorHandler *errh) {
     ScheduleInfo::initialize_task(this, &_task, true, errh);
     return 0;
 }
 
 bool
-PoundRadixIPLookup::run_task(Task *) {
-    IPRoute r(IPAddress(htonl(0x01010100)),
+BashRadixIPLookup::run_task(Task *) {
+    IPRoute r(IPAddress(htonl(0x10101000)),
 	      IPAddress(htonl(0xFFFFFF00)),
-	      IPAddress(htonl(0x01010101)),
+	      IPAddress(htonl(0xA1A2A3A)),
 	      0);
     for(int k=0;k<10000;k++)
       {
@@ -41,4 +41,4 @@ PoundRadixIPLookup::run_task(Task *) {
 }
 
 CLICK_ENDDECLS
-EXPORT_ELEMENT(PoundRadixIPLookup)
+EXPORT_ELEMENT(BashRadixIPLookup)
