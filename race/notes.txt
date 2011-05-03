@@ -1,0 +1,82 @@
+In RadixIPLookup::add_route, the code is pretty tightly linked. We
+first find a candidate key in the routing table vector, with 
+
+      int found = (_vfree < 0 ? _v.size() : _vfree);
+
+If concurrent threads access the above line, then they need to get
+exclusive access on _vfree and _v. The unfortunate part is that, they
+can't release the lock as soon as this statement is over as _v and
+_vfree are maninpulated at a later stage.
+
+    if (last_key && old_route)
+	*old_route = _v[last_key - 1];
+    if (last_key && !set)
+	return -EEXIST;
+
+    if (found == _v.size())
+	_v.push_back(route);
+    else {
+	_vfree = _v[found].extra;
+	_v[found] = route;
+    }
+    _v[found].extra = -1;
+
+    if (last_key) {
+	_v[last_key - 1].extra = _vfree;
+	_vfree = last_key - 1;
+    }
+
+The problem arises because of "last_key." We can't obtain last_key
+before change has been called. Without the "last_key" we don't know if
+we need to add a route into the table or return an error. We can say
+that if "set" is true, we will update the table irrespective of the
+last key value.
+
+We could create separate functions which handle the two cases -- set
+is true or false -- and reorder the way the statements are executed so
+that concurrent updaters are not blocked on the same region. But even
+then, the issue remains in the case when set is false -- which is the
+default behavior.
+
+An alternative design is to have "d" vectors for the d levels. Instead
+of acquiring a lock at a global level, we acquire the lock at a
+particular depth.
+
+
+In make_radix, we might need a memory barrier after the memset,
+otherwise we run the risk of readers reading uninitialized memory.
+
+
+	memset(r->_children, 0, n * sizeof(Child) + (n - 2) *
+	sizeof(int));
+	// mem fence here
+	return r;
+
+The reader trying to read the _v before the update on _v has been
+committed, but the updater has changed the radix tree with the key
+value.
+
+This problem is also there in the case of multiple updaters accessing
+the same location. 
+
+If we have concurrent updates on _v, we can have a rollback mechanism
+in place. Even if set is "false" we will insert the rule into the _v
+table. If later we find that we have a "last_key" present we should
+roll back the previous insert.
+
+
+We can separate the locking betweeen the tree and _v using optimistic
+insertion of routes in _v.
+
+Problems which we have -- 
+	 - Concurrent updates on _v -- we claim that can be solved
+	   using optimistic insertion
+
+	 - Concurrent updates on Radix
+	 - Concurrent updates on _v and Radix
+	 
+	 - Concurrent update on _v with reader
+	   can be solved with optimistic insertion
+
+	 - Concurrent updates on Radix with reader
+	 - Concurrent updates on _v and Radix and reader.
