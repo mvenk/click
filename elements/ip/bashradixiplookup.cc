@@ -2,7 +2,7 @@
 #include <click/confparse.hh>
 #include <click/standard/scheduleinfo.hh>
 #include "bashradixiplookup.hh"
-#include "radixiplookup100.hh"
+#include "radixiplookup101.hh"
 CLICK_DECLS
 
 BashRadixIPLookup::BashRadixIPLookup()
@@ -15,7 +15,7 @@ BashRadixIPLookup::~BashRadixIPLookup() {
 int
 BashRadixIPLookup::configure(Vector<String> &conf, ErrorHandler *errh) {
     return cp_va_kparse(conf, this, errh,
-			"RADIX", cpkP+cpkM, cpElementCast, "RadixIPLookup100", &_l,
+			"RADIX", cpkP+cpkM, cpElementCast, "RadixIPLookup101", &_l,
 			cpEnd);
 }
 

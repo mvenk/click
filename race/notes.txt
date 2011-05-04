@@ -80,3 +80,13 @@ Problems which we have --
 
 	 - Concurrent updates on Radix with reader
 	 - Concurrent updates on _v and Radix and reader.
+
+
+The deal with _default_key
+
+Assume two concurrent updaters are tyring to update the table with a
+/0 address. In that case, if there wasn't any previous /0 address or
+we can overwrite, then one of them will win -- which is fine. But, if
+say there was a reader along with these updaters, then the reader will
+either read the preevious value or the current value and not something
+in betweeen. Thus we don't need to do any locking.

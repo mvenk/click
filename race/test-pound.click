@@ -1,5 +1,5 @@
 Idle
- -> r :: RadixIPLookup100
+ -> r :: RadixIPLookup101
  -> Idle;
 
 p :: PoundRadixIPLookup(r);
