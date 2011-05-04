@@ -86,6 +86,8 @@ class RadixIPLookup101 : public IPRouteTable { public:
     String dump_routes();
 
   private:
+    int insert_into_v(const IPRoute &);
+    void remove_from_v(int found);
 
     class Radix;
 

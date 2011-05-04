@@ -170,13 +170,8 @@ int
 RadixIPLookup101::add_route(const IPRoute &route, bool set, IPRoute *old_route, ErrorHandler *)
 {
     int last_key;
-    _vlock.acquire();
-    // for now let's assume that there is no _vfree and all adds happen at the very end
-    int found = _v.size();
     // we optimistically push back the route onto the vector and don't do any free list management
-    _v.push_back(route);
-    _vlock.release();
-   
+    int found = insert_into_v(route);
 
     if (route.mask) {
 	uint32_t addr = ntohl(route.addr.addr());
@@ -190,33 +185,49 @@ RadixIPLookup101::add_route(const IPRoute &route, bool set, IPRoute *old_route, 
 	    _default_key = found + 1;
     }
 
-    if (last_key && old_route) { 
-	// TODO: locking on read, should not be required
-	// once a lock free vector is implemented.
-	_vlock.acquire();
-	*old_route = _v[last_key - 1];
-	_vlock.release();
+    if (last_key) { 
+	if(old_route) {	    	
+	    // TODO: locking on read, should not be required
+	    // once a lock free vector is implemented.
+	    _vlock.acquire();
+	    *old_route = _v[last_key - 1];
+	    _vlock.release();
+	}
+	if(set)
+	    remove_from_v(last_key);
+	else {
+	    remove_from_v(found);
+	    return -EEXIST;
+	}
     }
-    if (last_key && !set)
-	return -EEXIST;
-
-    // TODO: We are not doing any free list management.
-
-
-    // if (found == _v.size())
-    // 	_v.push_back(route);
-    // else {
-    // 	_vfree = _v[found].extra;
-    // 	_v[found] = route;
-    // }
-    //_v[found].extra = -1;
-
-    // if (last_key) {
-    // 	_v[last_key - 1].extra = _vfree;
-    // 	_vfree = last_key - 1;
-    // }
-
     return 0;
+}
+
+// helper function.
+// returns the the index into the _v table created
+int 
+RadixIPLookup101::insert_into_v(const IPRoute &route)
+{
+    _vlock.acquire();
+    int found = (_vfree < 0 ? _v.size() : _vfree);
+    if (found == _v.size())
+	_v.push_back(route);
+    else {
+	_vfree = _v[found].extra;
+	_v[found] = route;
+    }
+    _v[found].extra = -1;
+    _vlock.release();
+    return found;
+}
+
+void 
+RadixIPLookup101::remove_from_v(int key)
+{
+    _vlock.acquire();
+    _v[key - 1].extra = _vfree;
+    _vfree = key - 1;
+    _vlock.release();    
 }
 
 int
@@ -251,9 +262,7 @@ RadixIPLookup101::remove_route(const IPRoute& route, IPRoute* old_route, ErrorHa
     if (!last_key)
 	return -ENOENT;
 
-    // TODO: We aren't doing any free list management
-    // _v[last_key - 1].extra = _vfree;
-    // _vfree = last_key - 1;
+    remove_from_v(last_key);
 
     if (route.mask) {
 	uint32_t addr = ntohl(route.addr.addr());
