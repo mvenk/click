@@ -211,48 +211,6 @@ RadixIPLookup100::add_route(const IPRoute &route, bool set, IPRoute *old_route, 
 }
 
 int
-RadixIPLookup100::add_route(const IPRoute &route, bool set, IPRoute *old_route, ErrorHandler *)
-{
-    _lock.acquire();
-    printf("\nAdd_route. Acquire. %ld",(long int)syscall(224));
-    int found = (_vfree < 0 ? _v.size() : _vfree), last_key;
-    if (route.mask) {
-	uint32_t addr = ntohl(route.addr.addr());
-	uint32_t mask = ntohl(route.mask.addr());
-	last_key = _radix->change(addr, mask, found + 1, set);
-    } else {
-	last_key = _default_key;
-	if (!last_key || set)
-	    _default_key = found + 1;
-    }
-
-    if (last_key && old_route)
-	*old_route = _v[last_key - 1];
-    if (last_key && !set){
-	_lock.release();
-	printf("\nAdd_route. Release. %ld",(long int)syscall(224));
-	return -EEXIST;
-    }
-
-    if (found == _v.size())
-	_v.push_back(route);
-    else {
-	_vfree = _v[found].extra;
-	_v[found] = route;
-    }
-    _v[found].extra = -1;
-
-    if (last_key) {
-	_v[last_key - 1].extra = _vfree;
-	_vfree = last_key - 1;
-    }
-
-    _lock.release();
-    printf("\nAdd_route. Release. %ld",(long int)syscall(224));
-    return 0;
-}
-
-int
 RadixIPLookup100::remove_route(const IPRoute& route, IPRoute* old_route, ErrorHandler*)
 {
     _lock.acquire();
