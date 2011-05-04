@@ -19,7 +19,9 @@
 \newcounter{hyp-count}
 \addtocounter{hyp-count}{1}
 \newcommand{\hypothesis}[1]{\paragraph{Hypothesis \arabic{hyp-count}:}
-  \textsl{#1} \addtocounter{hyp-count}{1}}
+  #1 \addtocounter{hyp-count}{1}}
+
+\pagebreak
 \section{ABSTRACT}
 \section{INTRODUCTION}
 \section{RELATED WORK}
@@ -27,29 +29,112 @@
 
 \subsection{Changing Branching Factors}
 
-\hypothesis{For routing tables, which are dominated by longer prefixes, a
-higher level-1 branching factor, will lead to lower cache misses.} 
+\hypothesis{
+A routing table which is dominated by longer mask values will have to
+go deeper into the Radix tree to obtain the key. For example, for a
+/24 mask the original Radix design would need to traverse 5 levels (/8
++ /4 + /4 + /4 + /4). Instead if we had a branching factor of $2^{16}$
+at the first level and $2^{8}$ at the subsequent level, for the same
+/24 mask value, we will only need to traverse two levels of the
+tree. Reducing the number of levels, by increasing the branching
+factor,  will cause the number of pointers
+traversed to decrease and hence a reduction in cache misses. 
+} 
 
 \subsection{Using a Custom Allocator}
-\hypothesis{Ensuring that all Radix nodes are allocated from a
-  large contigous block of memory, will lead to lower cache misses.}
+\hypothesis{
+  At each Radix node there is space allocated for ``n'' number of
+  child nodes, where ``n'' is the number of buckets present at that
+  level. Along with this some extra space is allocated for ``n-2''
+  keys (integer values) -- which are referred to as ``superchildren.''
+  The superchildren are accessed only during updates to the table and
+  not during lookup. Thus when a Radix node is fetched into a cache
+  line, some space within the cache line is occupied by the
+  superchildren which are never touched during lookup. We reason that
+  at a level if we allocate all child nodes contiguously, without any
+  superchildren interleaved between them, we will be able to fit more
+  child nodes into the cache and get fewer misses. A custom allocator
+  is needed to achieve this.
+  }
 
 \subsection{Removing Derivable Fields}
-\hypothesis{Removing any derivable fields from the Radix node, will
-  lead to lower cache misses}
+\hypothesis{The Radix node consists of fields which are a function of
+  the depth at which the Radix node is present. These fields are
+  referred to as ``derivable fields.'' These fields contribute to the
+  size of the Radix node and will determine how many Radix nodes can
+  fit into a cache line. If we remove the derivable fields and instead
+  compute the value of each derived field when needed we will have the
+  same functionality with a Radix node which is smaller in size. A
+  smaller size lets us fit more nodes into one cache line and thus
+  lower of cache misses.}
 
-\subsection{Using a Static Lookup Table}
-\hypothesis{Using a static array to lookup the values of derivable
-  fields will cause an improvement in performance}
+\hypothesis{When we remove the derivable fields, we compute the values
+for these fields each time they are needed. Instead of computing this
+each time, we can have a static array of pre-computed values which is
+used whenever the values are needed. This will save us from executing
+the instructions at a cost of additional memory.}
 
 \subsection{Prefetching Child Nodes}
-\hypothesis{Once we know the next child node which is going to be
-  accessed by the lookup, using software prefetch will help us reduce
-  cache misses}
+\hypothesis{While doing the lookup we iteratively compute the next child node
+  to traverse. At the end of one iteration we know the next child
+  node. This child node can be prefetched into the cache using the
+  software prefetch instruction. By prefetching the child node before
+  it's accessed will reduce the number of cache misses.
+  }
 
-\subsection{Skip Nodes}
-\subsection{Detecting Null Children With Bit Value}
-\subsection{Memalign}
+\subsection{Using Separate Next Hop Table}
+\hypothesis{The key returned by lookup indexes into the whole routing
+  table, which returns the next hop and port. A routing table
+  contains many unique address, mask, next hop and port combinations,
+  but only a few unique next hop, port combinations. As the result of
+  a lookup only needs the next hop and port, we could have a
+  separate table which maintains only those two values.
+  As this table will be smaller in size, as compared to the entire
+  routing table, it will result in fewer cache misses.
+}
+
+\subsection{Skip Keys}
+\hypothesis{ Within a Radix tree there could be internal nodes which
+  have only one child, and that child has only one child, so on all
+  the way to a leaf node. That is, there is only one path which can be
+  followed out of that inner node. If we land on such a node, we
+  already know which key will be returned, because there is only one
+  path out. \\
+  Instead of traversing the entire path, we can store the key
+  within the inner node and skip the rest of the tree traversal. By
+  avoiding this traversal we expect fewer cache misses.
+}
+
+\subsection{Detecting Null Children}
+
+\hypothesis{ 
+  A Radix child node has two fields: a key and a pointer
+  to the child Radix node. Any given Radix node will have an array of
+  child nodes contained within it. 
+
+  When laid out in memory the array of child nodes look like this:\\
+
+
+    [key : Radix *, key : Radix * ... ]\\
+
+  
+  We suggest an alterative layout of the child node fields, with an
+  extra field called ``has\_child.'' The new layout has all the key
+  values in the array bunched up together followed by all the Radix
+  pointers. \\
+
+
+    [key : has\_child, key : has\_child .... Radix *, Radix * ... ]
+
+  
+  The has\_child field is only 1-bit. We squeeze the has\_child field into
+  the key field by making the key only 31-bits long. We use the
+  has\_child field to detect whether a key has an associated child. If
+  it doesn't, we avoid fetching the child pointer and would thus
+  expect to see a lower number of child misses.
+}
+
+
 
 \section{CONCLUSION}
 \section{FUTURE WORK}
