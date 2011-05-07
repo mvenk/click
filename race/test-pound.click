@@ -10,4 +10,6 @@ StaticThreadSched(
 	b 1,
 );
 
-DriverManager(wait 3, stop);
+DriverManager(wait 3, 
+		   print r.table,
+stop);
