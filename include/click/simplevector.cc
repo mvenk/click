@@ -42,7 +42,12 @@ SimpleVector<T>::reserve(int want)
     want = (_capacity > 0 ? _capacity * 2 : 4);
 
   while(true) {
-    T* old_l = _l;
+#if __x86_64__
+    uint64_t old_l = reinterpret_cast<uint64_t>(_l);
+#else
+    uint32_t old_l = reinterpret_cast<uint32_t>(_l);
+#endif
+
     if(want <= _capacity) 
       return true;
 
