@@ -2,7 +2,7 @@
 #include <click/confparse.hh>
 #include <click/standard/scheduleinfo.hh>
 #include "poundradixiplookup.hh"
-#include "radixiplookup102.hh"
+#include "radixiplookup103.hh"
 CLICK_DECLS
 
 PoundRadixIPLookup::PoundRadixIPLookup()
@@ -15,7 +15,7 @@ PoundRadixIPLookup::~PoundRadixIPLookup() {
 int
 PoundRadixIPLookup::configure(Vector<String> &conf, ErrorHandler *errh) {
     return cp_va_kparse(conf, this, errh,
-			"RADIX", cpkP+cpkM, cpElementCast, "RadixIPLookup102", &_l,
+			"RADIX", cpkP+cpkM, cpElementCast, "RadixIPLookup103", &_l,
 			cpEnd);
 }
 
