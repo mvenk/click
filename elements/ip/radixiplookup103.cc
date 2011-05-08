@@ -36,13 +36,17 @@ class RadixIPLookup103::Radix { public:
     int change(uint32_t addr, uint32_t mask, int key, bool set);
 
     static inline int lookup(const Radix *r, int cur, uint32_t addr, int &depth) {	
+	int current_depth = 0;
+	depth = current_depth;
 	while (r) {
 	    int i1 = (addr >> r->_bitshift) & (r->_n - 1);
 	    const Child &c = r->_children[i1];
-	    if (c.key)
+	    if (c.key) {
 		cur = c.key;
+		depth = current_depth;
+	    }
 	    r = c.child;
-	    depth++;
+	    current_depth++;
 	}
 	return cur;
     }
@@ -182,7 +186,6 @@ RadixIPLookup103::add_route(const IPRoute &route, bool set, IPRoute *old_route, 
 	depth = get_depth(ntohl(route.mask.addr()));
 
     int found = insert_into_v(route, depth);
-
     if (route.mask) {
 	uint32_t addr = ntohl(route.addr.addr());
 	uint32_t mask = ntohl(route.mask.addr());
@@ -304,7 +307,6 @@ RadixIPLookup103::remove_route(const IPRoute& route, IPRoute* old_route, ErrorHa
 	return -ENOENT;
 
     remove_from_v(last_key, depth);
-
     if (route.mask) {
 	uint32_t addr = ntohl(route.addr.addr());
 	uint32_t mask = ntohl(route.mask.addr());
@@ -319,7 +321,7 @@ RadixIPLookup103::remove_route(const IPRoute& route, IPRoute* old_route, ErrorHa
 int
 RadixIPLookup103::lookup_route(IPAddress addr, IPAddress &gw) const
 {
-    int depth = -1;
+    int depth = 0;
     int key = Radix::lookup(_radix, _default_key, ntohl(addr.addr()), depth);
     if(key == _default_key) 
 	depth = 0;
