@@ -208,16 +208,20 @@ RadixIPLookup104::add_route(const IPRoute &route, bool set, IPRoute *old_route, 
 int 
 RadixIPLookup104::insert_into_v(const IPRoute &route)
 {
+    int found = -1;
     _vlock.acquire();
-    int found = (_vfree < 0 ? _v.size() : _vfree);
-    if (found == _v.size())
-	_v.push_back(route);
-    else {
+    found = _vfree;
+    if(found >= 0)
 	_vfree = _v[found].extra;
+    _vlock.release();
+
+    if(found < 0) {
+	found = _v.push_back(route);
+    }
+    else {
 	_v[found] = route;
     }
     _v[found].extra = -1;
-    _vlock.release();
     return found;
 }
 

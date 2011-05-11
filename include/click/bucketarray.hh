@@ -32,7 +32,7 @@ public:
   }
   
   void clear() {}
-  inline void push_back(const T&x);
+  inline int push_back(const T&x);
   uint32_t capacity() const {return _npointers * ARRAY_SIZE;}
   int size() const {return _nelems;}
 private:

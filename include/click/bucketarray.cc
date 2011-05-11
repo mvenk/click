@@ -17,17 +17,27 @@ BucketArray<T>::~BucketArray() {
   CLICK_LFREE(_l, sizeof(T*) * _npointers);
 }
 
-template <class T> inline void
+template <class T> inline int
 BucketArray<T>::push_back(const T& x) 
 {
-  if(_nelems < capacity() || reserve()) {
-    uint32_t oldn = _nelems;
-    if(atomic_uint32_t::compare_swap(_nelems, oldn, oldn+1) == oldn) {
-      int pidx = oldn/ARRAY_SIZE;
-      int idx  = oldn % ARRAY_SIZE;
-      _l[pidx][idx] = x;
+  uint32_t oldn = _nelems;
+  if(oldn < capacity() || reserve()) {
+    while(true) {      
+      if(atomic_uint32_t::compare_swap(_nelems, oldn, oldn+1) != oldn) {
+	oldn = _nelems;
+	if(oldn >= capacity())
+	  reserve();
+      }
+      else {
+	break;
+      }
     }
+    int pidx = oldn/ARRAY_SIZE;
+    int idx  = oldn % ARRAY_SIZE;
+    _l[pidx][idx] = x;
+    return oldn;
   }
+  return -1;
 }
 
 template <class T> inline bool
