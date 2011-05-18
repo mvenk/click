@@ -303,7 +303,6 @@ RadixIPLookup105::lookup_route(IPAddress addr, IPAddress &gw) const
 void
 RadixIPLookup105::run_timer(Timer *)
 {
-    printf("\ntimer called");
     reclaim_v();
     _timer.schedule_after_msec(GRACE_PERIOD);    
 }
