@@ -3,6 +3,7 @@
 #define CLICK_ROUTERTHREAD_HH
 #include <click/sync.hh>
 #include <click/vector.hh>
+#include <click/hook.hh>
 #if CLICK_LINUXMODULE
 # include <click/cxxprotect.h>
 CLICK_CXX_PROTECT
@@ -23,7 +24,7 @@ CLICK_CXX_UNPROTECT
 // We cannot #include <click/task.hh> ourselves because of circular #include
 // dependency.
 CLICK_DECLS
-class ReclaimHook;
+
 class RouterThread
 #if !HAVE_TASK_HEAP
     : private Task
@@ -55,7 +56,7 @@ class RouterThread
     void unschedule_router_tasks(Router*);
     int epoch_count() const;
 
-    void add_reclaim_hook(ReclaimHook *);
+    void add_reclaim_hook(Hook *);
 
 #if HAVE_ADAPTIVE_SCHEDULER
     // min_cpu_share() and max_cpu_share() are expressed on a scale with
@@ -80,8 +81,9 @@ class RouterThread
     inline void set_thread_state(int state);
     inline void set_thread_state_for_blocking(int delay_type);
     int thread_state() const		{ return _thread_state; }
-#if CLICK_DEBUG_SCHEDULING
+    
     static String thread_state_name(int state);
+    #if CLICK_DEBUG_SCHEDULING
     uint32_t driver_epoch() const	{ return _driver_epoch; }
     uint32_t driver_task_epoch() const	{ return _driver_task_epoch; }
     Timestamp task_epoch_time(uint32_t epoch) const;
@@ -113,7 +115,7 @@ class RouterThread
     int _task_heap_hole;
     unsigned _pass;
 #endif
-    Vector<ReclaimHook *> _reclaim_hooks;
+    Vector<Hook *> _reclaim_hooks;
     uintptr_t _pending_head;
     volatile uintptr_t *_pending_tail;
     SpinlockIRQ _pending_lock;

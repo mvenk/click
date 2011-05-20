@@ -590,26 +590,36 @@ RouterThread::driver()
 #endif
 	}
     }
-    
+        
     // Quiescent state
     // Check thread epoch counters and see if they have the same value
     // as before. Or if the threads are blocked. If so, reclaim memory.
 
     _epoch_count++;
-    bool reclaim = true;
-    for(int i=0; i < nthreads; i++) {
-	RouterThread *t = _master->thread(i);
-	if(epoch_counts[i] == t->epoch_count() && t->thread_state() != S_BLOCKED) {
-	    reclaim = false;
-	    break;
-	}	    
+    if(_reclaim_hooks.size() > 0) {
+	bool reclaim = true;
+	click_chatter("Try reclaim");
+	for(int i=0; i < nthreads; i++) {
+	    RouterThread *t = _master->thread(i);
+	    click_chatter("%d: %s",i, t->thread_state_name(t->thread_state()).data());
+	    if(i != _id && 
+	       epoch_counts[i] == t->epoch_count() && 
+	       t->thread_state() != S_BLOCKED && 
+	       t->thread_state() != S_LOCKTASKS) {	    
+		reclaim = false;
+		break;
+	    }	    
+	    
+	}
+	if(reclaim) {
+	    click_chatter("Reclaiming at %d", _id);
+	    for(int i=0; i < _reclaim_hooks.size(); i++){
+		click_chatter("Firing");
+		_reclaim_hooks[i]->fire();
+	    }
+	}
     }
-    if(reclaim) {
-	click_chatter("Can reclaim");
-    }
-    else {
-	click_chatter("Not reclaim");
-    }
+
 
     // run task requests (1)
     if (_pending_head)
@@ -621,6 +631,7 @@ RouterThread::driver()
     int s = splimp();
 # endif
     run_tasks(_tasks_per_iter);
+    
 # if CLICK_BSDMODULE && !BSD_NETISRSCHED
     splx(s);
 # endif
@@ -658,6 +669,7 @@ RouterThread::driver()
 
 #if !BSD_NETISRSCHED
   finish_driver:
+     
 #endif
     driver_unlock_tasks();
 
@@ -745,7 +757,7 @@ RouterThread::epoch_count() const {
 }
 
 void
-RouterThread::add_reclaim_hook(ReclaimHook *hook) {
+RouterThread::add_reclaim_hook(Hook *hook) {
     if(hook) {
 	_reclaim_lock.acquire();
 	_reclaim_hooks.push_back(hook);
@@ -753,7 +765,7 @@ RouterThread::add_reclaim_hook(ReclaimHook *hook) {
     }
 }
 
-#if CLICK_DEBUG_SCHEDULING
+//#if CLICK_DEBUG_SCHEDULING
 String
 RouterThread::thread_state_name(int ts)
 {
@@ -771,6 +783,6 @@ RouterThread::thread_state_name(int ts)
     default:			return String(ts);
     }
 }
-#endif
+//#endif
 
 CLICK_ENDDECLS

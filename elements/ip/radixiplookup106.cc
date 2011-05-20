@@ -152,6 +152,7 @@ RadixIPLookup106::initialize(ErrorHandler *)
 
 void
 RadixIPLookup106::reclaim(){
+    click_chatter("radix:reclaim");
     reclaim_v();
 }
 
@@ -166,6 +167,12 @@ RadixIPLookup106::cleanup(CleanupStage)
     _v.clear();
     Radix::free_radix(_radix);
     _radix = 0;
+}
+
+bool
+RadixIPLookup106::run_task(Task *)
+{
+    return false;
 }
 
 
@@ -307,12 +314,6 @@ RadixIPLookup106::lookup_route(IPAddress addr, IPAddress &gw) const
     }
 }
 
-void
-RadixIPLookup106::run_timer(Timer *)
-{
-    reclaim_v();
-    _timer.schedule_after_msec(GRACE_PERIOD);    
-}
 
 void 
 RadixIPLookup106::reclaim_v()

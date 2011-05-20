@@ -90,8 +90,8 @@ class RadixIPLookup106 : public IPRouteTable, Reclaimable { public:
     int lookup_route(IPAddress, IPAddress&) const;
     String dump_routes();
     int initialize(ErrorHandler *);
-    void run_timer(Timer *);
     void reclaim();
+    bool run_task(Task *);
   private:
     int insert_into_v(const IPRoute &);
     void remove_from_v(int found);
@@ -109,10 +109,9 @@ class RadixIPLookup106 : public IPRouteTable, Reclaimable { public:
     Spinlock _vlock;
     Spinlock _rlock;
 
-    Timer _timer;
     Vector<int> _reclaim_now;
     Vector<int> _reclaim_later;
-    static const int GRACE_PERIOD=500;
+
 
     ReclaimHook _reclaimhook;
     Task _task;

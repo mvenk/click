@@ -7,11 +7,12 @@
 #include <click/sync.hh>
 #include <click/router.hh>
 #include <click/master.hh>
+#include <click/hook.hh>
 CLICK_DECLS
 class RouterThread;
 class Master;
 
-class ReclaimHook {public:
+class ReclaimHook:public Hook {public:
 
     inline ReclaimHook(Reclaimable *);
     inline ~ReclaimHook() {}

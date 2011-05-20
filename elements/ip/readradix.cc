@@ -2,7 +2,7 @@
 #include <click/confparse.hh>
 #include <click/standard/scheduleinfo.hh>
 #include "readradix.hh"
-#include "radixiplookup105.hh"
+#include "radixiplookup106.hh"
 #include <stdio.h>
 CLICK_DECLS
 
@@ -16,7 +16,7 @@ ReadRadix::~ReadRadix() {
 int
 ReadRadix::configure(Vector<String> &conf, ErrorHandler *errh) {
     return cp_va_kparse(conf, this, errh,
-			"RADIX", cpkP+cpkM, cpElementCast, "RadixIPLookup105", &_l,
+			"RADIX", cpkP+cpkM, cpElementCast, "RadixIPLookup106", &_l,
 			cpEnd);
 }
 
