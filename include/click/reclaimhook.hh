@@ -46,7 +46,6 @@ ReclaimHook::initialize(Element *owner, Task *task, bool schedule) {
     _thread = router->master()->thread(tid);
     _owner = owner;
     _task = task;
-    //TODO: add reclaimable element to router thread
     _thread->add_reclaim_hook(this);
 }
 

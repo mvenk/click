@@ -73,7 +73,7 @@ RouterThread::RouterThread(Master *m, int id)
     : Task(Task::error_hook, 0),
 #endif
       _pending_head(0), _pending_tail(&_pending_head),
-      _master(m), _id(id)
+      _master(m), _id(id), _epoch_count(0)
 {
 #if HAVE_TASK_HEAP
     _pass = 0;
@@ -591,6 +591,10 @@ RouterThread::driver()
 	}
     }
         
+    // run task requests (1)
+    if (_pending_head)
+	process_pending();
+
     // Quiescent state
     // Check thread epoch counters and see if they have the same value
     // as before. Or if the threads are blocked. If so, reclaim memory.
@@ -604,13 +608,12 @@ RouterThread::driver()
 	    click_chatter("%d: %s",i, t->thread_state_name(t->thread_state()).data());
 	    if(i != _id && 
 	       epoch_counts[i] == t->epoch_count() && 
-	       t->thread_state() != S_BLOCKED && 
-	       t->thread_state() != S_LOCKTASKS) {	    
+	       t->thread_state() != S_BLOCKED) {		
 		reclaim = false;
 		break;
-	    }	    
-	    
+	    }	    	   
 	}
+
 	if(reclaim) {
 	    click_chatter("Reclaiming at %d", _id);
 	    for(int i=0; i < _reclaim_hooks.size(); i++){
@@ -620,10 +623,6 @@ RouterThread::driver()
 	}
     }
 
-
-    // run task requests (1)
-    if (_pending_head)
-	process_pending();
 
 #if !HAVE_ADAPTIVE_SCHEDULER
     // run a bunch of tasks
