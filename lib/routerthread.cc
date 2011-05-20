@@ -744,6 +744,15 @@ RouterThread::epoch_count() const {
     return _epoch_count;
 }
 
+void
+RouterThread::add_reclaim_hook(ReclaimHook *hook) {
+    if(hook) {
+	_reclaim_lock.acquire();
+	_reclaim_hooks.push_back(hook);
+	_reclaim_lock.release();
+    }
+}
+
 #if CLICK_DEBUG_SCHEDULING
 String
 RouterThread::thread_state_name(int ts)

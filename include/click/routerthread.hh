@@ -23,7 +23,7 @@ CLICK_CXX_UNPROTECT
 // We cannot #include <click/task.hh> ourselves because of circular #include
 // dependency.
 CLICK_DECLS
-
+class ReclaimHook;
 class RouterThread
 #if !HAVE_TASK_HEAP
     : private Task
@@ -54,6 +54,8 @@ class RouterThread
 
     void unschedule_router_tasks(Router*);
     int epoch_count() const;
+
+    void add_reclaim_hook(ReclaimHook *);
 
 #if HAVE_ADAPTIVE_SCHEDULER
     // min_cpu_share() and max_cpu_share() are expressed on a scale with
@@ -111,7 +113,7 @@ class RouterThread
     int _task_heap_hole;
     unsigned _pass;
 #endif
-
+    Vector<ReclaimHook *> _reclaim_hooks;
     uintptr_t _pending_head;
     volatile uintptr_t *_pending_tail;
     SpinlockIRQ _pending_lock;
@@ -130,6 +132,7 @@ class RouterThread
     volatile bool _wake_pipe_pending;
 #endif
     Spinlock _task_lock;
+    Spinlock _reclaim_lock;
     atomic_uint32_t _task_blocker;
     atomic_uint32_t _task_blocker_waiting;
 
