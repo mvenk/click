@@ -605,10 +605,10 @@ RouterThread::driver()
 	click_chatter("Try reclaim");
 	for(int i=0; i < nthreads; i++) {
 	    RouterThread *t = _master->thread(i);
-	    click_chatter("%d: %s",i, t->thread_state_name(t->thread_state()).data());
+	    click_chatter("%d: %s",i, t->thread_state_name(t->thread_state()).data(),t->epoch_count());
 	    if(i != _id && 
 	       epoch_counts[i] == t->epoch_count() && 
-	       t->thread_state() != S_BLOCKED) {		
+	       t->thread_state() != S_BLOCKED) {
 		reclaim = false;
 		break;
 	    }	    	   
