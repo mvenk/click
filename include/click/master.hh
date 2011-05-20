@@ -61,6 +61,7 @@ class Master { public:
     void initialize_ns(simclick_node_t *simnode);
     simclick_node_t *simnode() const		{ return _simnode; }
 #endif
+    
 
 #if CLICK_DEBUG_MASTER || CLICK_DEBUG_SCHEDULING
     String info() const;

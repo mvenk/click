@@ -53,6 +53,7 @@ class RouterThread
     void driver_once();
 
     void unschedule_router_tasks(Router*);
+    int epoch_count() const;
 
 #if HAVE_ADAPTIVE_SCHEDULER
     // min_cpu_share() and max_cpu_share() are expressed on a scale with
@@ -76,8 +77,8 @@ class RouterThread
 	   NSTATES };
     inline void set_thread_state(int state);
     inline void set_thread_state_for_blocking(int delay_type);
-#if CLICK_DEBUG_SCHEDULING
     int thread_state() const		{ return _thread_state; }
+#if CLICK_DEBUG_SCHEDULING
     static String thread_state_name(int state);
     uint32_t driver_epoch() const	{ return _driver_epoch; }
     uint32_t driver_task_epoch() const	{ return _driver_task_epoch; }
@@ -118,6 +119,8 @@ class RouterThread
     Master *_master;
     int _id;
 
+    int _epoch_count;
+
 #if CLICK_LINUXMODULE
     struct task_struct *_linux_task;
 #elif HAVE_MULTITHREAD
@@ -157,8 +160,9 @@ class RouterThread
     unsigned _cur_click_share;		// current Click share
 #endif
 
-#if CLICK_DEBUG_SCHEDULING
+
     int _thread_state;
+#if CLICK_DEBUG_SCHEDULING
     uint32_t _driver_epoch;
     uint32_t _driver_task_epoch;
     enum { TASK_EPOCH_BUFSIZ = 32 };
@@ -422,6 +426,7 @@ inline void
 RouterThread::set_thread_state(int state)
 {
     assert(state >= 0 && state < NSTATES);
+    _thread_state = state;
 #if CLICK_DEBUG_SCHEDULING
 # if CLICK_DEBUG_SCHEDULING > 1
     Timestamp now = Timestamp::now();
@@ -431,7 +436,6 @@ RouterThread::set_thread_state(int state)
 	++_thread_state_count[_thread_state];
     _thread_state_timestamp = now;
 # endif
-    _thread_state = state;
 #endif
 }
 

@@ -513,6 +513,11 @@ RouterThread::driver()
 {
     const volatile int * const stopper = _master->stopper_ptr();
     int iter = 0;
+    int * epoch_counts;
+    int nthreads = _master->nthreads();
+    epoch_counts = new int[nthreads];
+    memset(epoch_counts, 0, sizeof(int)*nthreads);
+	
 #if CLICK_LINUXMODULE
     // this task is running the driver
     _linux_task = current;
@@ -544,6 +549,11 @@ RouterThread::driver()
   driver_loop:
 #endif
 
+    // Collect all epoch counts for all threads
+    for(int i=0; i < nthreads; i++) {
+	RouterThread *t = _master->thread(i);
+	epoch_counts[i] = t->epoch_count();
+    }
 #if CLICK_DEBUG_SCHEDULING
     _driver_epoch++;
 #endif
@@ -579,6 +589,26 @@ RouterThread::driver()
 	    }
 #endif
 	}
+    }
+    
+    // Quiescent state
+    // Check thread epoch counters and see if they have the same value
+    // as before. Or if the threads are blocked. If so, reclaim memory.
+
+    _epoch_count++;
+    bool reclaim = true;
+    for(int i=0; i < nthreads; i++) {
+	RouterThread *t = _master->thread(i);
+	if(epoch_counts[i] == t->epoch_count() && t->thread_state() != S_BLOCKED) {
+	    reclaim = false;
+	    break;
+	}	    
+    }
+    if(reclaim) {
+	click_chatter("Can reclaim");
+    }
+    else {
+	click_chatter("Not reclaim");
     }
 
     // run task requests (1)
@@ -639,6 +669,8 @@ RouterThread::driver()
 #elif HAVE_MULTITHREAD
     _running_processor = click_invalid_processor();
 #endif
+
+    delete epoch_counts;
 }
 
 
@@ -705,6 +737,11 @@ RouterThread::unschedule_router_tasks(Router* r)
     t->_prev = prev;
 #endif
     unlock_tasks();
+}
+
+int
+RouterThread::epoch_count() const {
+    return _epoch_count;
 }
 
 #if CLICK_DEBUG_SCHEDULING
