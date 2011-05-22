@@ -443,7 +443,8 @@ Master::try_reclaim()
 	click_chatter("%d: %s,%d",i, t->thread_state_name(t->thread_state()).data(),t->epoch_count());
 	if(_thread_epoch_counts[i] == t->epoch_count() && 
 	   t->thread_state() != RouterThread::S_BLOCKED &&
-	   t->thread_state() != RouterThread::S_LOCKTASKS) {
+	   t->thread_state() != RouterThread::S_LOCKTASKS &&
+	   t->thread_state()!=RouterThread::S_PAUSED) {
 	    reclaim = false;
 	    break;
 	}
