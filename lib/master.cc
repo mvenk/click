@@ -69,6 +69,10 @@ Master::Master(int nthreads)
     for (int tid = -1; tid < nthreads; tid++)
 	_threads.push_back(new RouterThread(this, tid));
 
+    // initialize epoch_counts array
+    _thread_epoch_counts = new int[nthreads];
+    memset(_thread_epoch_counts, 0, sizeof(int)*nthreads);
+    
     // timer information
 #if CLICK_NS
     _max_timer_stride = 1;
@@ -425,6 +429,50 @@ Master::run_one_timer(Timer *t)
 #endif
 }
 
+// RCU
+void 
+Master::try_reclaim()
+{
+    // check to see if we can increment the global epoch
+    bool reclaim = true;
+    RouterThread *t;
+    click_chatter("Trying to reclaim");
+    for(int i=0;i<nthreads();i++){
+	// global epoch count.
+	t = thread(i);
+	click_chatter("%d: %s,%d",i, t->thread_state_name(t->thread_state()).data(),t->epoch_count());
+	if(_thread_epoch_counts[i] == t->epoch_count() && 
+	   t->thread_state() != RouterThread::S_BLOCKED &&
+	   t->thread_state() != RouterThread::S_LOCKTASKS) {
+	    reclaim = false;
+	    break;
+	}
+    }
+
+    if(reclaim){
+	//update all epoch numbers here
+	for(int i=0;i<nthreads();i++){
+		t=thread(i);
+		_thread_epoch_counts[i]=t->epoch_count();
+	}
+	_global_epoch++;
+	click_chatter("Reclaiming");
+	for(int i=0; i < _reclaim_hooks.size(); i++){
+	    click_chatter("Firing");
+	    _reclaim_hooks[i]->fire();
+	} // for
+    }// if increment
+}
+
+void
+Master::add_reclaim_hook(Hook *hook) {
+    if(hook) {
+	_reclaim_lock.acquire();
+	_reclaim_hooks.push_back(hook);
+	_reclaim_lock.release();
+    }
+}
+
 void
 Master::run_timers(RouterThread *thread)
 {
@@ -460,7 +508,8 @@ Master::run_timers(RouterThread *thread)
 		set_timer_expiry();
 		t->_schedpos1 = 0;
 
-		run_one_timer(t);
+		run_one_timer(t);		
+
 	    } while (_timer_heap.size() > 0 && !_stopper
 		     && (th = _timer_heap.begin(), th->expiry <= _timer_check)
 		     && --max_timers >= 0);
@@ -1301,6 +1350,7 @@ Master::info() const
     }
     return sa.take_string();
 }
+
 
 #endif
 CLICK_ENDDECLS

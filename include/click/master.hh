@@ -3,6 +3,7 @@
 #define CLICK_MASTER_HH
 #include <click/router.hh>
 #include <click/atomic.hh>
+# include <click/hook.hh>
 #if CLICK_USERLEVEL
 # include <unistd.h>
 # include <signal.h>
@@ -45,6 +46,10 @@ class Master { public:
     unsigned max_timer_stride() const		{ return _max_timer_stride; }
     unsigned timer_stride() const		{ return _timer_stride; }
     void set_max_timer_stride(unsigned timer_stride);
+
+    // RCU
+    void try_reclaim();
+    void add_reclaim_hook(Hook *);
 
 #if CLICK_USERLEVEL
     int add_select(int fd, Element *element, int mask);
@@ -104,6 +109,12 @@ class Master { public:
     volatile int _stopper;
     inline void set_stopper(int);
     bool check_driver();
+
+    // RCU
+    int _global_epoch;
+    Vector<Hook *> _reclaim_hooks;
+    Spinlock _reclaim_lock;
+    int* _thread_epoch_counts;
 
     // TIMERS
     unsigned _max_timer_stride;

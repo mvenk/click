@@ -1,3 +1,4 @@
+
 // -*- c-basic-offset: 4; related-file-name: "../include/click/routerthread.hh" -*-
 /*
  * routerthread.{cc,hh} -- Click threads
@@ -117,8 +118,9 @@ RouterThread::RouterThread(Master *m, int id)
     greedy_schedule_jiffies = jiffies;
 #endif
 
-#if CLICK_DEBUG_SCHEDULING
+
     _thread_state = S_BLOCKED;
+#if CLICK_DEBUG_SCHEDULING
     _driver_epoch = 0;
     _driver_task_epoch = 0;
     _task_epoch_first = 0;
@@ -369,6 +371,13 @@ RouterThread::run_tasks(int ntasks)
     int runs;
 #endif
     for (; ntasks >= 0; --ntasks) {
+      // Quiescent state
+      // Check thread epoch counters and see if they have the same value
+      // as before. Or if the threads are blocked. If so, reclaim memory.
+
+    _epoch_count++;
+    _master->try_reclaim();
+
 #if HAVE_TASK_HEAP
 	if (_task_heap.size() == 0)
 	    break;
@@ -410,7 +419,9 @@ RouterThread::run_tasks(int ntasks)
 	}
 #endif
 
+
     post_fire:
+
 #if HAVE_TASK_HEAP
 	if (_task_heap_hole) {
 	    Task *back = _task_heap.back().t;
@@ -513,11 +524,6 @@ RouterThread::driver()
 {
     const volatile int * const stopper = _master->stopper_ptr();
     int iter = 0;
-    int * epoch_counts;
-    int nthreads = _master->nthreads();
-    epoch_counts = new int[nthreads];
-    memset(epoch_counts, 0, sizeof(int)*nthreads);
-	
 #if CLICK_LINUXMODULE
     // this task is running the driver
     _linux_task = current;
@@ -549,11 +555,7 @@ RouterThread::driver()
   driver_loop:
 #endif
 
-    // Collect all epoch counts for all threads
-    for(int i=0; i < nthreads; i++) {
-	RouterThread *t = _master->thread(i);
-	epoch_counts[i] = t->epoch_count();
-    }
+    _epoch_count++;
 #if CLICK_DEBUG_SCHEDULING
     _driver_epoch++;
 #endif
@@ -590,38 +592,25 @@ RouterThread::driver()
 #endif
 	}
     }
+
+      // Quiescent state
+      // Check thread epoch counters and see if they have the same value
+      // as before. Or if the threads are blocked. If so, reclaim memory.
+
+    _epoch_count++;
+    _master->try_reclaim();
+
         
     // run task requests (1)
     if (_pending_head)
 	process_pending();
 
-    // Quiescent state
-    // Check thread epoch counters and see if they have the same value
-    // as before. Or if the threads are blocked. If so, reclaim memory.
+      // Quiescent state
+      // Check thread epoch counters and see if they have the same value
+      // as before. Or if the threads are blocked. If so, reclaim memory.
 
     _epoch_count++;
-    if(_reclaim_hooks.size() > 0) {
-	bool reclaim = true;
-	click_chatter("Try reclaim");
-	for(int i=0; i < nthreads; i++) {
-	    RouterThread *t = _master->thread(i);
-	    click_chatter("%d: %s",i, t->thread_state_name(t->thread_state()).data(),t->epoch_count());
-	    if(i != _id && 
-	       epoch_counts[i] == t->epoch_count() && 
-	       t->thread_state() != S_BLOCKED) {
-		reclaim = false;
-		break;
-	    }	    	   
-	}
-
-	if(reclaim) {
-	    click_chatter("Reclaiming at %d", _id);
-	    for(int i=0; i < _reclaim_hooks.size(); i++){
-		click_chatter("Firing");
-		_reclaim_hooks[i]->fire();
-	    }
-	}
-    }
+    _master->try_reclaim();
 
 
 #if !HAVE_ADAPTIVE_SCHEDULER
@@ -681,7 +670,6 @@ RouterThread::driver()
     _running_processor = click_invalid_processor();
 #endif
 
-    delete epoch_counts;
 }
 
 
@@ -757,11 +745,7 @@ RouterThread::epoch_count() const {
 
 void
 RouterThread::add_reclaim_hook(Hook *hook) {
-    if(hook) {
-	_reclaim_lock.acquire();
-	_reclaim_hooks.push_back(hook);
-	_reclaim_lock.release();
-    }
+  _master->add_reclaim_hook(hook);
 }
 
 //#if CLICK_DEBUG_SCHEDULING
