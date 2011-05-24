@@ -91,7 +91,6 @@ class RadixIPLookup106 : public IPRouteTable, Reclaimable { public:
     String dump_routes();
     int initialize(ErrorHandler *);
     void reclaim();
-    bool run_task(Task *);
   private:
     int insert_into_v(const IPRoute &);
     void remove_from_v(int found);
@@ -114,7 +113,6 @@ class RadixIPLookup106 : public IPRouteTable, Reclaimable { public:
 
 
     ReclaimHook _reclaimhook;
-    Task _task;
 };
 
 CLICK_ENDDECLS

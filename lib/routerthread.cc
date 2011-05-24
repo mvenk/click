@@ -375,8 +375,8 @@ RouterThread::run_tasks(int ntasks)
       // Check thread epoch counters and see if they have the same value
       // as before. Or if the threads are blocked. If so, reclaim memory.
 
-    _epoch_count++;
-    _master->try_reclaim();
+      _epoch_count++;
+      _master->try_reclaim();
 
 #if HAVE_TASK_HEAP
 	if (_task_heap.size() == 0)
@@ -556,6 +556,7 @@ RouterThread::driver()
 #endif
 
     _epoch_count++;
+    _master->try_reclaim();
 #if CLICK_DEBUG_SCHEDULING
     _driver_epoch++;
 #endif
@@ -592,25 +593,10 @@ RouterThread::driver()
 #endif
 	}
     }
-
-      // Quiescent state
-      // Check thread epoch counters and see if they have the same value
-      // as before. Or if the threads are blocked. If so, reclaim memory.
-
-    _epoch_count++;
-    _master->try_reclaim();
-
         
     // run task requests (1)
     if (_pending_head)
 	process_pending();
-
-      // Quiescent state
-      // Check thread epoch counters and see if they have the same value
-      // as before. Or if the threads are blocked. If so, reclaim memory.
-
-    _epoch_count++;
-    _master->try_reclaim();
 
 
 #if !HAVE_ADAPTIVE_SCHEDULER

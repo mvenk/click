@@ -114,6 +114,7 @@ class Master { public:
     int _global_epoch;
     Vector<Hook *> _reclaim_hooks;
     Spinlock _reclaim_lock;
+    Spinlock _try_reclaim_lock;
     int* _thread_epoch_counts;
 
     // TIMERS

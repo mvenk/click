@@ -150,6 +150,8 @@ Master::~Master()
     if (_refcount > 0)
 	click_chatter("deleting master while ref count = %d", _refcount);
 
+    delete _thread_epoch_counts;
+
     for (int i = 0; i < _threads.size(); i++)
 	delete _threads[i];
 #if CLICK_USERLEVEL && HAVE_USE_KQUEUE
@@ -433,36 +435,49 @@ Master::run_one_timer(Timer *t)
 void 
 Master::try_reclaim()
 {
+    // multiple threads call try_reclaim at the same time,
+    // but only one should excecute it.
+
+    bool got_lock = _try_reclaim_lock.attempt();
+    if(got_lock == false)
+	return;
+
     // check to see if we can increment the global epoch
     bool reclaim = true;
     RouterThread *t;
     click_chatter("Trying to reclaim");
-    for(int i=0;i<nthreads();i++){
-	// global epoch count.
+    int n = nthreads();
+    for(int i = 0; i < n ; i++){
 	t = thread(i);
-	click_chatter("%d: %s,%d",i, t->thread_state_name(t->thread_state()).data(),t->epoch_count());
+	int state = t->thread_state();
+	click_chatter("%d: %s,now: %d, before: %d",i, t->thread_state_name(state).data(),t->epoch_count(), _thread_epoch_counts[i]);
+
 	if(_thread_epoch_counts[i] == t->epoch_count() && 
-	   t->thread_state() != RouterThread::S_BLOCKED &&
-	   t->thread_state() != RouterThread::S_LOCKTASKS &&
-	   t->thread_state()!=RouterThread::S_PAUSED) {
+	   (state == RouterThread::S_RUNTIMER ||
+	    state == RouterThread::S_RUNSELECT ||
+	    state == RouterThread::S_RUNSIGNAL ||
+	    state == RouterThread::S_RUNSELECT ||
+	    state == RouterThread::S_RUNTASK)) {
 	    reclaim = false;
-	    break;
+	    //break;
 	}
     }
 
     if(reclaim){
 	//update all epoch numbers here
-	for(int i=0;i<nthreads();i++){
-		t=thread(i);
+	for(int i = 0; i < n; i++){
+		t = thread(i);
 		_thread_epoch_counts[i]=t->epoch_count();
 	}
 	_global_epoch++;
 	click_chatter("Reclaiming");
-	for(int i=0; i < _reclaim_hooks.size(); i++){
+	for(int i = 0; i < _reclaim_hooks.size(); i++){
 	    click_chatter("Firing");
 	    _reclaim_hooks[i]->fire();
-	} // for
-    }// if increment
+	} 
+    }
+
+    _try_reclaim_lock.release();
 }
 
 void

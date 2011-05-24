@@ -17,14 +17,12 @@ class ReclaimHook:public Hook {public:
     inline ReclaimHook(Reclaimable *);
     inline ~ReclaimHook() {}
 
-    inline void initialize(Element *, Task *, bool);
+    inline void initialize(Element *);
 
     inline void fire();
 
     private:
     Element *_owner;
-    Task *_task;
-    RouterThread *_thread;
     void * _thunk;
     friend class RouterThread;
 
@@ -37,16 +35,11 @@ ReclaimHook::ReclaimHook(Reclaimable *r)
 }
 
 void
-ReclaimHook::initialize(Element *owner, Task *task, bool schedule) {
+ReclaimHook::initialize(Element *owner) {
     assert(owner);
-    Router *router = owner->router();
-    int tid = router->initial_home_thread_id(owner, task, schedule);
-    if(tid == ThreadSched::THREAD_UNKNOWN)
-	tid = 0;
-    _thread = router->master()->thread(tid);
+    Router *router = owner->router();    
+    router->master()->add_reclaim_hook(this);
     _owner = owner;
-    _task = task;
-    _thread->add_reclaim_hook(this);
 }
 
 void

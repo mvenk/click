@@ -137,7 +137,7 @@ RadixIPLookup106::Radix::change(uint32_t addr, uint32_t mask, int key, bool set)
 
 
 RadixIPLookup106::RadixIPLookup106()
-    : _vfree(-1), _default_key(0), _radix(Radix::make_radix(24, 256)), _reclaimhook(this), _task(this)
+    : _vfree(-1), _default_key(0), _radix(Radix::make_radix(24, 256)), _reclaimhook(this)
 {
    
 }
@@ -145,8 +145,7 @@ RadixIPLookup106::RadixIPLookup106()
 int
 RadixIPLookup106::initialize(ErrorHandler *)
 {
-    _task.initialize(this, true);
-    _reclaimhook.initialize(this, &_task, true);
+    _reclaimhook.initialize(this);
     return 0;
 }
 
@@ -168,13 +167,6 @@ RadixIPLookup106::cleanup(CleanupStage)
     Radix::free_radix(_radix);
     _radix = 0;
 }
-
-bool
-RadixIPLookup106::run_task(Task *)
-{
-    return false;
-}
-
 
 String
 RadixIPLookup106::dump_routes()
@@ -318,6 +310,12 @@ RadixIPLookup106::lookup_route(IPAddress addr, IPAddress &gw) const
 void 
 RadixIPLookup106::reclaim_v()
 {
+    if(_reclaim_now.empty())
+	click_chatter("Reclaim now empty");
+    else 
+	click_chatter("Reclaim now ready to be freed");
+    if(_reclaim_later.empty())
+	click_chatter("Reclaim later empty");
     _vlock.acquire();
     while(!_reclaim_now.empty()) {
 	mark_as_free(_reclaim_now.front());
