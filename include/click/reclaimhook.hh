@@ -18,19 +18,22 @@ class ReclaimHook:public Hook {public:
     inline ~ReclaimHook() {}
 
     inline void initialize(Element *);
-
+    inline bool scheduled()  { return _is_scheduled; }
+    inline void schedule()   { _is_scheduled = true; } 
+    inline void unschedule() { _is_scheduled = false; }
     inline void fire();
 
     private:
     Element *_owner;
     void * _thunk;
-    friend class RouterThread;
+    bool _is_scheduled;
+    
 
 };
 
 inline
 ReclaimHook::ReclaimHook(Reclaimable *r)
-    :_thunk(r){
+    :_thunk(r), _is_scheduled(false){
 
 }
 
@@ -41,6 +44,7 @@ ReclaimHook::initialize(Element *owner) {
     router->master()->add_reclaim_hook(this);
     _owner = owner;
 }
+
 
 void
 ReclaimHook::fire() {

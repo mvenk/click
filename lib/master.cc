@@ -472,8 +472,10 @@ Master::try_reclaim()
 	_global_epoch++;
 	click_chatter("Reclaiming");
 	for(int i = 0; i < _reclaim_hooks.size(); i++){
-	    click_chatter("Firing");
-	    _reclaim_hooks[i]->fire();
+	    if(_reclaim_hooks[i]->scheduled()) {
+		click_chatter("Firing");
+		_reclaim_hooks[i]->fire();
+	    }
 	} 
     }
 

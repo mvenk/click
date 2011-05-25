@@ -245,6 +245,7 @@ RadixIPLookup106::remove_from_v(int key)
 {
     _vlock.acquire();
     _reclaim_later.push_back(key-1);
+    _reclaimhook.schedule();
     _vlock.release();    
 }
 
@@ -309,13 +310,7 @@ RadixIPLookup106::lookup_route(IPAddress addr, IPAddress &gw) const
 
 void 
 RadixIPLookup106::reclaim_v()
-{
-    if(_reclaim_now.empty())
-	click_chatter("Reclaim now empty");
-    else 
-	click_chatter("Reclaim now ready to be freed");
-    if(_reclaim_later.empty())
-	click_chatter("Reclaim later empty");
+{	    
     _vlock.acquire();
     while(!_reclaim_now.empty()) {
 	mark_as_free(_reclaim_now.front());
@@ -324,6 +319,13 @@ RadixIPLookup106::reclaim_v()
     Vector<int> temp = _reclaim_now;
     _reclaim_now = _reclaim_later;
     _reclaim_later = temp;
+
+    // If there is nothing to free in the next quiescent state
+    // we unschedule ourselves.
+    if(_reclaim_now.empty()) {
+	_reclaimhook.unschedule();
+    }
+
     _vlock.release();
 }
 
