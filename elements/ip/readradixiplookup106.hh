@@ -1,16 +1,16 @@
-#ifndef CLICK_READRADIX_HH
-#define CLICK_READRADIX_HH
+#ifndef CLICK_READRADIXIPLOOKUP106_HH
+#define CLICK_READRADIXIPLOOKUP106_HH
 #include <click/element.hh>
 #include <click/task.hh>
 CLICK_DECLS
 class RadixIPLookup106;
 
-class ReadRadix : public Element { public:
+class ReadRadixIPLookup106 : public Element { public:
 
-    ReadRadix();
-    ~ReadRadix();
+    ReadRadixIPLookup106();
+    ~ReadRadixIPLookup106();
 
-    const char *class_name() const	{ return "ReadRadix"; }
+    const char *class_name() const	{ return "ReadRadixIPLookup106"; }
 
     int configure(Vector<String> &conf, ErrorHandler *errh);
     int initialize(ErrorHandler *errh);

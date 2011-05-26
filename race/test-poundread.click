@@ -2,10 +2,10 @@ Idle
  -> r :: RadixIPLookup106
  -> Idle;
 
-p :: PoundRadixIPLookup(r);
-b :: BashRadixIPLookup(r);
-p2 :: PoundRadixIPLookup(r);
-reader :: ReadRadix(r);
+p :: PoundRadixIPLookup106(r);
+b :: BashRadixIPLookup106(r);
+p2 :: PoundRadixIPLookup106(r);
+reader :: ReadRadixIPLookup106(r);
 
 StaticThreadSched(
 	p 0,

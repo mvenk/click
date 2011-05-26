@@ -3,7 +3,7 @@
 #include <click/element.hh>
 #include <click/task.hh>
 CLICK_DECLS
-class RadixIPLookup106;
+class RadixIPLookup;
 
 class PoundRadixIPLookup : public Element { public:
 
@@ -19,7 +19,7 @@ class PoundRadixIPLookup : public Element { public:
 
   private:
 
-    RadixIPLookup106 *_l;
+    RadixIPLookup *_l;
     Task _task;
 
 };
