@@ -459,7 +459,7 @@ Master::try_reclaim()
 	    state == RouterThread::S_RUNSELECT ||
 	    state == RouterThread::S_RUNTASK)) {
 	    reclaim = false;
-	    //break;
+	    break;
 	}
     }
 

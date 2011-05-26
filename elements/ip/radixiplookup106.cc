@@ -172,8 +172,9 @@ String
 RadixIPLookup106::dump_routes()
 {
     StringAccum sa;
-    for (int j = _vfree; j >= 0; j = _v[j].extra)
+    for (int j = _vfree; j >= 0; j = _v[j].extra) {
 	_v[j].kill();
+    }
     for (int i = 0; i < _v.size(); i++)
 	if (_v[i].real())
 	    _v[i].unparse(sa, true) << '\n';
