@@ -3,7 +3,6 @@
 #include <click/standard/scheduleinfo.hh>
 #include "readradixiplookup.hh"
 #include "radixiplookup.hh"
-#include <stdio.h>
 CLICK_DECLS
 
 ReadRadixIPLookup::ReadRadixIPLookup()
@@ -32,7 +31,7 @@ ReadRadixIPLookup::run_task(Task *) {
   int port = 0;
   for(int k=0;k<1000;k++) {
       port = _l->lookup_route(ip, gw);
-      printf("Port: %d GW: %d\n", port, gw.addr());
+      // click_chatter("Port: %d GW: %d\n", port, gw.addr());
   }
   return false;
 }

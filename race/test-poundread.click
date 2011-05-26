@@ -4,16 +4,12 @@ Idle
 
 p :: PoundRadixIPLookup106(r);
 b :: BashRadixIPLookup106(r);
-p2 :: PoundRadixIPLookup106(r);
 reader :: ReadRadixIPLookup106(r);
 
 StaticThreadSched(
 	p 0,
 	b 1,
-	reader 2,
-	p2 3,
+	reader 2
 );
 
-DriverManager(wait 3, 
-		   print r.table,
-stop);
+DriverManager(stop);
