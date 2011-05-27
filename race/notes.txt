@@ -90,3 +90,41 @@ we can overwrite, then one of them will win -- which is fine. But, if
 say there was a reader along with these updaters, then the reader will
 either read the preevious value or the current value and not something
 in betweeen. Thus we don't need to do any locking.
+
+
+Even though with RCU we can have lock free readers, we still need to
+worry about updaters which might read stale data. This can be solved
+by coarse grained locking in the updaters, but by careful design we
+could get away with finer locks.
+
+During an update, it's wrong to have:
+       - A key is repeated on reclaim_now and/or reclaim_later.
+
+       - The same key to be on reclaim_now and reclaim_later.
+       	 This would mean that the updaters freed the same key
+	 twice. For example, mark_as_free is defined as:
+
+	 	mark_as_free(int key) {
+		  _v[key].extra = _vfree;
+		  _vfree = key;
+		}
+
+	If mark_as_free is called with the same key twice, before
+	_vfree is used. We have a cycle. For example, consider key 1.
+	
+	_v[1].extra = _vfree;
+	_vfree = 1;
+
+	_v[1].extra = _vfree //_v[1].extra is now equal to 1
+	_vfree = 1;
+	
+	Now when _vfree is used like: 
+	found = _vfree //found = 1
+	_vfree = _v[found].extra // _vfree = 1 , cycle
+
+
+       - The same key to be on reclaim_now and on the _vfree list.
+       	 This could potentially cause the updaters to use stale data. 
+	 
+       - The same key to be on reclaim_later and on the _vfree list.
+       	 This could potentially cause the updaters to use stale data.

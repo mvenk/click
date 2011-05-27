@@ -14,6 +14,4 @@ StaticThreadSched(
 	p2 3,
 );
 
-DriverManager(wait 3, 
-		   print r.table,
-stop);
+DriverManager(stop);
