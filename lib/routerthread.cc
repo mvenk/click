@@ -643,6 +643,7 @@ RouterThread::driver()
 
 #if !BSD_NETISRSCHED
   finish_driver:
+    click_chatter("finished driver loop.");
      
 #endif
     driver_unlock_tasks();
