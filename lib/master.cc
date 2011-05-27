@@ -445,12 +445,12 @@ Master::try_reclaim()
     // check to see if we can increment the global epoch
     bool reclaim = true;
     RouterThread *t;
-    click_chatter("Trying to reclaim");
+    // click_chatter("Trying to reclaim");
     int n = nthreads();
     for(int i = 0; i < n ; i++){
 	t = thread(i);
 	int state = t->thread_state();
-	click_chatter("%d: %s,now: %d, before: %d",i, t->thread_state_name(state).data(),t->epoch_count(), _thread_epoch_counts[i]);
+	// click_chatter("%d: %s,now: %d, before: %d",i, t->thread_state_name(state).data(),t->epoch_count(), _thread_epoch_counts[i]);
 
 	if(_thread_epoch_counts[i] == t->epoch_count() && 
 	   (state == RouterThread::S_RUNTIMER ||
@@ -470,10 +470,10 @@ Master::try_reclaim()
 		_thread_epoch_counts[i]=t->epoch_count();
 	}
 	_global_epoch++;
-	click_chatter("Reclaiming");
+	// click_chatter("Reclaiming");
 	for(int i = 0; i < _reclaim_hooks.size(); i++){
 	    if(_reclaim_hooks[i]->scheduled()) {
-		click_chatter("Firing");
+		// click_chatter("Firing");
 		_reclaim_hooks[i]->fire();
 	    }
 	} 

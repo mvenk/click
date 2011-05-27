@@ -8,6 +8,7 @@ CLICK_DECLS
 
 template <class T>
 BucketArray<T>::~BucketArray() {
+  click_chatter("In bucket array destructor");
   for(int i=0; i < (int)_npointers; i++) {
     for(int j=0; j < ARRAY_SIZE; j++) {
       _l[i][j].~T();
@@ -54,7 +55,8 @@ BucketArray<T>::reserve() {
       return false;
     
     memcpy(new_l, _l, sizeof(T**) * _npointers);
-    CLICK_LFREE((T**) _l, sizeof(T**) * _npointers);
+    // see if seg-fault goes away if we do not free.
+    // CLICK_LFREE((T**) _l, sizeof(T**) * _npointers);
     _l = new_l;
 
     // Using CAS to increment _npointers, as it also acts as a memory

@@ -151,7 +151,7 @@ RadixIPLookup106::initialize(ErrorHandler *)
 
 void
 RadixIPLookup106::reclaim(){
-    click_chatter("radix:reclaim");
+    // click_chatter("radix:reclaim");
     reclaim_v();
 }
 
@@ -163,6 +163,7 @@ RadixIPLookup106::~RadixIPLookup106()
 void
 RadixIPLookup106::cleanup(CleanupStage)
 {
+    click_chatter("RadixIPLookup cleanup");
     _v.clear();
     Radix::free_radix(_radix);
     _radix = 0;
