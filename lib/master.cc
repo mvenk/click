@@ -60,7 +60,7 @@ extern "C" { static void sighandler(int signo); }
 #endif
 
 Master::Master(int nthreads)
-    : _routers(0)
+    : _routers(0), _try_reclaim_count_all()
 {
     _refcount = 0;
     _stopper = 0;
@@ -68,6 +68,10 @@ Master::Master(int nthreads)
 
     for (int tid = -1; tid < nthreads; tid++)
 	_threads.push_back(new RouterThread(this, tid));
+
+    _try_reclaim_count = 0;
+    _reclaim_count = 0;
+    _reclaim_fire_count = 0;
 
     // initialize epoch_counts array
     _thread_epoch_counts = new int[nthreads];
@@ -175,6 +179,7 @@ Master::unuse()
     _refcount--;
     bool del = (_refcount <= 0);
     unlock_master();
+    
     if (del)
 	delete this;
 }
@@ -185,9 +190,11 @@ Master::pause()
     lock_timers();
 #if CLICK_USERLEVEL
     _select_lock.acquire();
+    lock_reclaimers();
 #endif
     _master_paused++;
 #if CLICK_USERLEVEL
+    unlock_reclaimers();
     _select_lock.release();
 #endif
     unlock_timers();
@@ -235,8 +242,7 @@ Master::kill_router(Router *router)
 {
 #if CLICK_LINUXMODULE
     assert(!in_interrupt());
-#endif
-
+#endif        
     lock_master();
     assert(router && router->_master == this);
     int was_running = router->_running;
@@ -316,6 +322,20 @@ Master::kill_router(Router *router)
 		pprev = &si->next;
 	_signal_lock.release();
     }
+
+    {
+	lock_reclaimers();
+	for(int i = 0; i < _reclaim_hooks.size(); i++) {
+	    if(_reclaim_hooks[i]->scheduled()) {
+		_reclaim_fire_count++;
+		_reclaim_hooks[i]->fire();
+	    }
+	    _reclaim_hooks[i]->unschedule();
+	}
+	unlock_reclaimers();
+    }
+
+
 #endif
 
     unpause();
@@ -331,6 +351,11 @@ Master::kill_router(Router *router)
 void
 Master::unregister_router(Router *router)
 {
+    // print reclamation counts
+    click_chatter("Try reclaim all: %d", _try_reclaim_count_all.value());
+    click_chatter("Try reclaim count: %d", _try_reclaim_count);
+    click_chatter("Try reclaim success: %d", _reclaim_count);
+    click_chatter("Reclaim fire count: %d", _reclaim_fire_count);
     assert(router);
     lock_master();
 
@@ -435,13 +460,17 @@ Master::run_one_timer(Timer *t)
 void 
 Master::try_reclaim()
 {
+    if(_master_paused) 
+    	return;
+
     // multiple threads call try_reclaim at the same time,
     // but only one should excecute it.
-
+    _try_reclaim_count_all++;
     bool got_lock = _try_reclaim_lock.attempt();
     if(got_lock == false)
 	return;
 
+    _try_reclaim_count++;
     // check to see if we can increment the global epoch
     bool reclaim = true;
     RouterThread *t;
@@ -464,6 +493,7 @@ Master::try_reclaim()
     }
 
     if(reclaim){
+	_reclaim_count++;
 	//update all epoch numbers here
 	for(int i = 0; i < n; i++){
 		t = thread(i);
@@ -474,11 +504,24 @@ Master::try_reclaim()
 	for(int i = 0; i < _reclaim_hooks.size(); i++){
 	    if(_reclaim_hooks[i]->scheduled()) {
 		// click_chatter("Firing");
+		_reclaim_fire_count++;
 		_reclaim_hooks[i]->fire();
 	    }
 	} 
     }
 
+    _try_reclaim_lock.release();
+}
+
+void
+Master::lock_reclaimers() {
+    _try_reclaim_lock.acquire();
+    _reclaim_lock.acquire();
+}
+
+void
+Master::unlock_reclaimers() {
+    _reclaim_lock.release();
     _try_reclaim_lock.release();
 }
 
