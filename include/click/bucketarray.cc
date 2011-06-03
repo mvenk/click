@@ -46,20 +46,20 @@ BucketArray<T>::reserve() {
   _lock.acquire();
   if(_nelems >= capacity()) {
     T ** new_l = (T **) CLICK_LALLOC(sizeof(T*) * (_npointers + 1));
-    if(!new_l){ 
+    if(!new_l) {
       _lock.release();
       return false;
     }
+    
     new_l[_npointers] = (T *) CLICK_LALLOC(sizeof(T) * ARRAY_SIZE);
     
-    if(!new_l[_npointers]){
+    if(!new_l[_npointers]) {
       _lock.release();
       return false;
     }
     
     memcpy(new_l, _l, sizeof(T**) * _npointers);
-    // see if seg-fault goes away if we do not free.
-    // CLICK_LFREE((T**) _l, sizeof(T**) * _npointers);
+    CLICK_LFREE((T**) _l, sizeof(T**) * _npointers);
     _l = new_l;
 
     // Using CAS to increment _npointers, as it also acts as a memory

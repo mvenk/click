@@ -262,9 +262,16 @@ RadixIPLookup106::remove_route(const IPRoute& route, IPRoute* old_route, ErrorHa
 	// NB: this will never actually make changes
 	_rlock.acquire();
 	last_key = _radix->change(addr, mask, 0, false);
+	if (!last_key) {
+	    _rlock.release();
+	    return -ENOENT;
+	}
+	(void) _radix->change(addr, mask, 0, true);			
 	_rlock.release();
-    } else
+    } else {
 	last_key = _default_key;
+	_default_key = 0;
+    }
 
 
     if(last_key) {
@@ -279,21 +286,9 @@ RadixIPLookup106::remove_route(const IPRoute& route, IPRoute* old_route, ErrorHa
 
 	if(!route.match(r))
 	    return -ENOENT;
-    }
-
-    if (!last_key)
-	return -ENOENT;
-
+    }    
     remove_from_v(last_key);
 
-    if (route.mask) {
-	uint32_t addr = ntohl(route.addr.addr());
-	uint32_t mask = ntohl(route.mask.addr());
-	_rlock.acquire();
-	(void) _radix->change(addr, mask, 0, true);
-	_rlock.release();
-    } else
-	_default_key = 0;
     return 0;
 }
 

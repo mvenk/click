@@ -50,6 +50,8 @@ class Master { public:
     // RCU
     void try_reclaim();
     void add_reclaim_hook(Hook *);
+    void lock_reclaimers();
+    void unlock_reclaimers();
 
 #if CLICK_USERLEVEL
     int add_select(int fd, Element *element, int mask);
@@ -116,6 +118,10 @@ class Master { public:
     Spinlock _reclaim_lock;
     Spinlock _try_reclaim_lock;
     int* _thread_epoch_counts;
+    atomic_uint32_t _try_reclaim_count_all;
+    int _try_reclaim_count;
+    int _reclaim_count;
+    int _reclaim_fire_count;
 
     // TIMERS
     unsigned _max_timer_stride;
