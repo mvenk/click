@@ -151,7 +151,6 @@ RadixIPLookup106::initialize(ErrorHandler *)
 
 void
 RadixIPLookup106::reclaim(){
-    // click_chatter("radix:reclaim");
     reclaim_v();
 }
 

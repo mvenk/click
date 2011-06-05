@@ -154,7 +154,7 @@ Master::~Master()
     if (_refcount > 0)
 	click_chatter("deleting master while ref count = %d", _refcount);
 
-    delete _thread_epoch_counts;
+    delete []_thread_epoch_counts;
 
     for (int i = 0; i < _threads.size(); i++)
 	delete _threads[i];
