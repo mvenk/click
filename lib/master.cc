@@ -154,7 +154,7 @@ Master::~Master()
     if (_refcount > 0)
 	click_chatter("deleting master while ref count = %d", _refcount);
 
-    delete []_thread_epoch_counts;
+    delete[] _thread_epoch_counts;
 
     for (int i = 0; i < _threads.size(); i++)
 	delete _threads[i];
@@ -352,10 +352,10 @@ void
 Master::unregister_router(Router *router)
 {
     // print reclamation counts
-    click_chatter("Try reclaim all: %d", _try_reclaim_count_all.value());
-    click_chatter("Try reclaim count: %d", _try_reclaim_count);
-    click_chatter("Try reclaim success: %d", _reclaim_count);
-    click_chatter("Reclaim fire count: %d", _reclaim_fire_count);
+    //click_chatter("Try reclaim all: %d", _try_reclaim_count_all.value());
+    //click_chatter("Try reclaim count: %d", _try_reclaim_count);
+    //click_chatter("Try reclaim success: %d", _reclaim_count);
+    //click_chatter("Reclaim fire count: %d", _reclaim_fire_count);
     assert(router);
     lock_master();
 

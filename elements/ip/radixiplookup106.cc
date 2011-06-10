@@ -156,13 +156,14 @@ RadixIPLookup106::reclaim(){
 
 RadixIPLookup106::~RadixIPLookup106()
 {
+    // click_chatter("In radixiplookup106 destructor");
 }
 
 
 void
 RadixIPLookup106::cleanup(CleanupStage)
 {
-    click_chatter("RadixIPLookup cleanup");
+    // click_chatter("RadixIPLookup cleanup");
     _v.clear();
     Radix::free_radix(_radix);
     _radix = 0;
@@ -306,8 +307,10 @@ RadixIPLookup106::lookup_route(IPAddress addr, IPAddress &gw) const
 
 void 
 RadixIPLookup106::reclaim_v()
-{	    
+{
+    //click_chatter("In radixiplookup reclaim_v");
     _vlock.acquire();
+    //click_chatter("Acquired _vlock in radixiplookup reclaim_v");
     while(!_reclaim_now.empty()) {
 	mark_as_free(_reclaim_now.front());
 	_reclaim_now.pop_front();
@@ -323,6 +326,7 @@ RadixIPLookup106::reclaim_v()
     }
 
     _vlock.release();
+    //click_chatter("Released _vlock in radixiplookup reclaim_v");
 }
 
 void 

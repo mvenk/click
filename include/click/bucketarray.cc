@@ -8,7 +8,7 @@ CLICK_DECLS
 
 template <class T>
 BucketArray<T>::~BucketArray() {
-  click_chatter("In bucket array destructor");
+  // click_chatter("In bucket array destructor");
   for(int i=0; i < (int)_npointers; i++) {
     for(int j=0; j < ARRAY_SIZE; j++) {
       _l[i][j].~T();
