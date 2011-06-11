@@ -479,8 +479,9 @@ private:
 };
 
 inline
-ReadWriteLockUser :: ReadWriteLockUser() : _readers()
+ReadWriteLockUser :: ReadWriteLockUser() 
 {
+    _readers = 0;
 }
 
 inline
