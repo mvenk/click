@@ -36,6 +36,9 @@ class RadixIPLookup::Radix { public:
     int change(uint32_t addr, uint32_t mask, int key, bool set);
 
     static inline int lookup(const Radix *r, int cur, uint32_t addr) {
+	#if  defined(CONFIG_SMP)
+	click_chatter("config-smp defined");
+	#endif
 	while (r) {
 	    int i1 = (addr >> r->_bitshift) & (r->_n - 1);
 	    const Child &c = r->_children[i1];

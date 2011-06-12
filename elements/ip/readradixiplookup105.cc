@@ -34,7 +34,8 @@ ReadRadixIPLookup105::run_task(Task *) {
       port = _l->lookup_route(ip, gw);
       printf("Port: %d GW: %d\n", port, gw.addr());
   }
-  return false;
+  _task.fast_reschedule();
+  return true;
 }
 
 CLICK_ENDDECLS

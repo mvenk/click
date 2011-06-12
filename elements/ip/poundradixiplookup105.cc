@@ -37,7 +37,8 @@ PoundRadixIPLookup105::run_task(Task *) {
 	_l->remove_route(r,0,0);
       }
      _l->add_route(r, true, 0, 0);
-    return false;
+  _task.fast_reschedule();
+  return true;
 }
 
 CLICK_ENDDECLS
