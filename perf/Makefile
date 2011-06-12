@@ -13,5 +13,5 @@ all: 167k 1m_gt20 1m_32 366k
 	./testrunner.sh $(n) $@ $(conf) 5mshuffle.dump | tee means.$@.$(ARCH).$(DATE).out
 
 
-
-
+mean: mean.c
+	gcc -lm -o mean mean.c

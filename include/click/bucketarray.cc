@@ -61,11 +61,7 @@ BucketArray<T>::reserve() {
     memcpy(new_l, _l, sizeof(T**) * _npointers);
     CLICK_LFREE((T**) _l, sizeof(T**) * _npointers);
     _l = new_l;
-
-    // Using CAS to increment _npointers, as it also acts as a memory
-    // barrier. A CAS is strictly not required here, because we have already
-    // acquired a lock.
-    atomic_uint32_t::compare_swap(_npointers, _npointers, _npointers + 1);
+    _npointers++;
     
   }
   _lock.release();

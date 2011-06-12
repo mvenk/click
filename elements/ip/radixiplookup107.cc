@@ -1,6 +1,6 @@
 // -*- c-basic-offset: 4 -*-
 /*
- * radixiplookup.{cc,hh} -- looks up next-hop address in radix table
+* radixiplookup.{cc,hh} -- looks up next-hop address in radix table
  * Eddie Kohler (earlier versions: Thomer M. Gil, Benjie Chen)
  *
  * Copyright (c) 1999-2001 Massachusetts Institute of Technology
@@ -25,12 +25,12 @@
 #include <click/error.hh>
 #include <click/glue.hh>
 #include <click/straccum.hh>
-#include <click/reclaimhook.hh>
-#include "radixiplookup106.hh"
-
+#include "radixiplookup107.hh"
+#include <unistd.h>
+#include <stdio.h>
 CLICK_DECLS
 
-class RadixIPLookup106::Radix { public:
+class RadixIPLookup107::Radix { public:
 
     static Radix *make_radix(int bitshift, int n);
     static void free_radix(Radix *r);
@@ -71,12 +71,12 @@ class RadixIPLookup106::Radix { public:
 	}
     }
 
-    friend class RadixIPLookup106;
+    friend class RadixIPLookup107;
 
 };
 
-RadixIPLookup106::Radix*
-RadixIPLookup106::Radix::make_radix(int bitshift, int n)
+RadixIPLookup107::Radix*
+RadixIPLookup107::Radix::make_radix(int bitshift, int n)
 {
     if (Radix* r = (Radix*) new unsigned char[sizeof(Radix) + n * sizeof(Child) + (n - 2) * sizeof(int)]) {
 	r->_bitshift = bitshift;
@@ -89,7 +89,7 @@ RadixIPLookup106::Radix::make_radix(int bitshift, int n)
 }
 
 void
-RadixIPLookup106::Radix::free_radix(Radix* r)
+RadixIPLookup107::Radix::free_radix(Radix* r)
 {
     if (r->_nchildren)
 	for (int i = 0; i < r->_n; i++)
@@ -99,7 +99,7 @@ RadixIPLookup106::Radix::free_radix(Radix* r)
 }
 
 int
-RadixIPLookup106::Radix::change(uint32_t addr, uint32_t mask, int key, bool set)
+RadixIPLookup107::Radix::change(uint32_t addr, uint32_t mask, int key, bool set)
 {
     int i1 = (addr >> _bitshift) & (_n - 1);
 
@@ -136,46 +136,31 @@ RadixIPLookup106::Radix::change(uint32_t addr, uint32_t mask, int key, bool set)
 }
 
 
-RadixIPLookup106::RadixIPLookup106()
-    : _vfree(-1), _default_key(0), _radix(Radix::make_radix(24, 256)), _reclaimhook(this)
+RadixIPLookup107::RadixIPLookup107()
+    : _vfree(-1), _default_key(0), _radix(Radix::make_radix(24, 256))
 {
-   
 }
 
-int
-RadixIPLookup106::initialize(ErrorHandler *)
+RadixIPLookup107::~RadixIPLookup107()
 {
-    _reclaimhook.initialize(this);
-    return 0;
-}
-
-void
-RadixIPLookup106::reclaim(){
-    reclaim_v();
-}
-
-RadixIPLookup106::~RadixIPLookup106()
-{
-    // click_chatter("In radixiplookup106 destructor");
 }
 
 
 void
-RadixIPLookup106::cleanup(CleanupStage)
+RadixIPLookup107::cleanup(CleanupStage)
 {
-    // click_chatter("RadixIPLookup cleanup");
     _v.clear();
     Radix::free_radix(_radix);
     _radix = 0;
 }
 
+
 String
-RadixIPLookup106::dump_routes()
+RadixIPLookup107::dump_routes()
 {
     StringAccum sa;
-    for (int j = _vfree; j >= 0; j = _v[j].extra) {
+    for (int j = _vfree; j >= 0; j = _v[j].extra)
 	_v[j].kill();
-    }
     for (int i = 0; i < _v.size(); i++)
 	if (_v[i].real())
 	    _v[i].unparse(sa, true) << '\n';
@@ -184,159 +169,94 @@ RadixIPLookup106::dump_routes()
 
 
 int
-RadixIPLookup106::add_route(const IPRoute &route, bool set, IPRoute *old_route, ErrorHandler *)
+RadixIPLookup107::add_route(const IPRoute &route, bool set, IPRoute *old_route, ErrorHandler *)
 {
-    int last_key;
-    // we optimistically push back the route onto the vector and don't do any free list management
-    int found = insert_into_v(route);
-
+    _lock.acquire_write();
+    int found = (_vfree < 0 ? _v.size() : _vfree), last_key;
     if (route.mask) {
 	uint32_t addr = ntohl(route.addr.addr());
 	uint32_t mask = ntohl(route.mask.addr());
-	_rlock.acquire();
 	last_key = _radix->change(addr, mask, found + 1, set);
-	_rlock.release();
     } else {
 	last_key = _default_key;
 	if (!last_key || set)
 	    _default_key = found + 1;
     }
 
-    if (last_key) { 
-	if(old_route) {	    	
-	    // TODO: locking on read, should not be required
-	    // once a lock free vector is implemented.
-	    _vlock.acquire();
-	    *old_route = _v[last_key - 1];
-	    _vlock.release();
-	}
-	if(set)
-	    remove_from_v(last_key);
-	else {
-	    remove_from_v(found);
-	    return -EEXIST;
-	}
+    if (last_key && old_route)
+	*old_route = _v[last_key - 1];
+    if (last_key && !set){
+	_lock.release_write();
+	return -EEXIST;
     }
-    return 0;
-}
 
-// helper function.
-// returns the the index into the _v table created
-int 
-RadixIPLookup106::insert_into_v(const IPRoute &route)
-{
-    int found = -1;
-    _vlock.acquire();
-    found = _vfree;
-    if(found >= 0)
-	_vfree = _v[found].extra;
-    _vlock.release();
-
-    if(found < 0) {
-	found = _v.push_back(route);
-    }
+    if (found == _v.size())
+	_v.push_back(route);
     else {
+	_vfree = _v[found].extra;
 	_v[found] = route;
     }
     _v[found].extra = -1;
-    return found;
-}
 
-void 
-RadixIPLookup106::remove_from_v(int key)
-{
-    _vlock.acquire();
-    _reclaim_later.push_back(key-1);
-    _reclaimhook.schedule();
-    _vlock.release();    
+    if (last_key) {
+	_v[last_key - 1].extra = _vfree;
+	_vfree = last_key - 1;
+    }
+
+    _lock.release_write();
+    return 0;
 }
 
 int
-RadixIPLookup106::remove_route(const IPRoute& route, IPRoute* old_route, ErrorHandler*)
+RadixIPLookup107::remove_route(const IPRoute& route, IPRoute* old_route, ErrorHandler*)
 {
+    _lock.acquire_write();
+
     int last_key;
     if (route.mask) {
 	uint32_t addr = ntohl(route.addr.addr());
 	uint32_t mask = ntohl(route.mask.addr());
 	// NB: this will never actually make changes
-	_rlock.acquire();
 	last_key = _radix->change(addr, mask, 0, false);
-	if (!last_key) {
-	    _rlock.release();
-	    return -ENOENT;
-	}
-	(void) _radix->change(addr, mask, 0, true);			
-	_rlock.release();
-    } else {
+    } else
 	last_key = _default_key;
-	_default_key = 0;
+
+    if (last_key && old_route)
+	*old_route = _v[last_key - 1];
+    if (!last_key || !route.match(_v[last_key - 1])) {
+	_lock.release_write();
+	return -ENOENT;
     }
+    _v[last_key - 1].extra = _vfree;
+    _vfree = last_key - 1;
 
-
-    if(last_key) {
-	// TODO: locking on read, 
-        IPRoute r;
-	_vlock.acquire();
-	r = _v[last_key - 1];
-	_vlock.release();
-
-	if(old_route)
-	    *old_route = r;
-
-	if(!route.match(r))
-	    return -ENOENT;
-    }    
-    remove_from_v(last_key);
-
+    if (route.mask) {
+	uint32_t addr = ntohl(route.addr.addr());
+	uint32_t mask = ntohl(route.mask.addr());
+	(void) _radix->change(addr, mask, 0, true);
+    } else
+	_default_key = 0;
+    
+    _lock.release_write();
     return 0;
 }
 
 int
-RadixIPLookup106::lookup_route(IPAddress addr, IPAddress &gw) const
-{
+RadixIPLookup107::lookup_route(IPAddress addr, IPAddress &gw) const
+{  
+    _lock.acquire_read();
     int key = Radix::lookup(_radix, _default_key, ntohl(addr.addr()));
+    int port = -1;
+    gw = 0;    
     if (key) {
 	gw = _v[key - 1].gw;
-	return _v[key - 1].port;
-    } else {
-	gw = 0;
-	return -1;
+	port =  _v[key - 1].port;
     }
+    _lock.release_read();
+    return port;
 }
 
-
-void 
-RadixIPLookup106::reclaim_v()
-{
-    //click_chatter("In radixiplookup reclaim_v");
-    _vlock.acquire();
-    //click_chatter("Acquired _vlock in radixiplookup reclaim_v");
-    while(!_reclaim_now.empty()) {
-	mark_as_free(_reclaim_now.front());
-	_reclaim_now.pop_front();
-    }        
-    Vector<int> temp = _reclaim_now;
-    _reclaim_now = _reclaim_later;
-    _reclaim_later = temp;
-
-    // If there is nothing to free in the next quiescent state
-    // we unschedule ourselves.
-    if(_reclaim_now.empty()) {
-	_reclaimhook.unschedule();
-    }
-
-    _vlock.release();
-    //click_chatter("Released _vlock in radixiplookup reclaim_v");
-}
-
-void 
-RadixIPLookup106::mark_as_free(int key)
-{
-    _v[key].extra = _vfree;
-    _vfree = key;
-    
-}
 
 CLICK_ENDDECLS
 ELEMENT_REQUIRES(IPRouteTable)
-EXPORT_ELEMENT(RadixIPLookup106)
+EXPORT_ELEMENT(RadixIPLookup107)
