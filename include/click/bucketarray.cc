@@ -59,13 +59,45 @@ BucketArray<T>::reserve() {
     }
     
     memcpy(new_l, _l, sizeof(T**) * _npointers);
-    CLICK_LFREE((T**) _l, sizeof(T**) * _npointers);
+    //CLICK_LFREE((T**) _l, sizeof(T**) * _npointers);
+    bucketpointer to_be_freed;
+    to_be_freed.l_pointer = (void*) _l;
+    to_be_freed.size = _npointers * sizeof(T**);
+    _reclaim_later.push_back(to_be_freed);
+    //_reclaimhook.schedule();
+
     _l = new_l;
     _npointers++;
     
   }
   _lock.release();
   return true;
+}
+
+template <class T> inline void
+BucketArray<T>::reclaim_l()
+{
+ 
+    _lock.acquire();
+
+    while(!_reclaim_now.empty()) {
+      void * l = _reclaim_now.front().l_pointer;
+      int size = _reclaim_now.front().size;
+	CLICK_LFREE((T**) l, size);
+	_reclaim_now.pop_front();
+    }        
+    Vector<bucketpointer> temp = _reclaim_now;
+    _reclaim_now = _reclaim_later;
+    _reclaim_later = temp;
+
+    // If there is nothing to free in the next quiescent state
+    // we unschedule ourselves.
+    //if(_reclaim_now.empty()) {
+    //_reclaimhook.unschedule();
+    //}
+
+    _lock.release();
+ 
 }
 
 CLICK_ENDDECLS

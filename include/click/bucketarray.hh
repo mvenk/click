@@ -1,11 +1,12 @@
 #ifndef BUCKET_ARRAY_HH
 #define BUCKET_ARRAY_HH
 #include <click/sync.hh>
-
+#include <click/reclaimable.hh>
+#include <click/reclaimhook.hh>
 CLICK_DECLS
 
 template <class T>
-class BucketArray {
+class BucketArray{
  
 public:
 
@@ -13,6 +14,12 @@ public:
     _l(0), _nelems(0), _npointers(0) {
     
   }
+
+  struct bucketpointer {
+    void* l_pointer;
+    int size;
+  };
+
   ~BucketArray();
   enum { RESERVE_GROW = (int) - 1};
   static const int ARRAY_SIZE = 1024;
@@ -35,6 +42,7 @@ public:
   inline int push_back(const T&x);
   uint32_t capacity() const {return _npointers * ARRAY_SIZE;}
   int size() const {return _nelems;}
+  void reclaim_l();
 private:
   bool reserve();
   T **_l;
@@ -47,6 +55,11 @@ private:
   uint32_t _npointers;
 
   Spinlock _lock;
+  // RCU
+  // ReclaimHook _reclaimhook;
+  Vector<bucketpointer> _reclaim_now;
+  Vector<bucketpointer> _reclaim_later;
+
 };
 
 CLICK_ENDDECLS

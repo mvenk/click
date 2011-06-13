@@ -324,7 +324,7 @@ RadixIPLookup106::reclaim_v()
     if(_reclaim_now.empty()) {
 	_reclaimhook.unschedule();
     }
-
+    _v.reclaim_l();
     _vlock.release();
     //click_chatter("Released _vlock in radixiplookup reclaim_v");
 }
