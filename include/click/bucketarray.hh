@@ -15,10 +15,6 @@ public:
     
   }
 
-  struct bucketpointer {
-    void* l_pointer;
-    int size;
-  };
 
   ~BucketArray();
   enum { RESERVE_GROW = (int) - 1};
@@ -57,8 +53,8 @@ private:
   Spinlock _lock;
   // RCU
   // ReclaimHook _reclaimhook;
-  Vector<bucketpointer> _reclaim_now;
-  Vector<bucketpointer> _reclaim_later;
+  Vector<void*> _reclaim_now;
+  Vector<void*> _reclaim_later;
 
 };
 

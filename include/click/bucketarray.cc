@@ -45,7 +45,7 @@ template <class T> inline bool
 BucketArray<T>::reserve() {
   _lock.acquire();
   if(_nelems >= capacity()) {
-    T ** new_l = (T **) CLICK_LALLOC(sizeof(T*) * (_npointers + 1));
+    T ** new_l = (T **) new unsigned char[sizeof(T*) * (_npointers + 1)];
     if(!new_l) {
       _lock.release();
       return false;
@@ -59,11 +59,7 @@ BucketArray<T>::reserve() {
     }
     
     memcpy(new_l, _l, sizeof(T**) * _npointers);
-    //CLICK_LFREE((T**) _l, sizeof(T**) * _npointers);
-    bucketpointer to_be_freed;
-    to_be_freed.l_pointer = (void*) _l;
-    to_be_freed.size = _npointers * sizeof(T**);
-    _reclaim_later.push_back(to_be_freed);
+    _reclaim_later.push_back((void*)_l);
     //_reclaimhook.schedule();
 
     _l = new_l;
@@ -81,12 +77,11 @@ BucketArray<T>::reclaim_l()
     _lock.acquire();
 
     while(!_reclaim_now.empty()) {
-      void * l = _reclaim_now.front().l_pointer;
-      int size = _reclaim_now.front().size;
-	CLICK_LFREE((T**) l, size);
-	_reclaim_now.pop_front();
+      void * l = _reclaim_now.front();
+      delete[] (unsigned char *)l;
+      _reclaim_now.pop_front();
     }        
-    Vector<bucketpointer> temp = _reclaim_now;
+    Vector<void*> temp = _reclaim_now;
     _reclaim_now = _reclaim_later;
     _reclaim_later = temp;
 
