@@ -29,6 +29,7 @@ bool
 ReadRadixIPLookup::run_task(Task *) {
   IPAddress ip(htonl(0x01010100)), gw(0);
   int port = 0;
+
   for(int k=0;k<100000;k++) {
       port = _l->lookup_route(ip, gw);
       // click_chatter("Port: %d GW: %d\n", port, gw.addr());
