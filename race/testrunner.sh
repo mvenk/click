@@ -12,7 +12,7 @@ if [ $# -ne 1 ]; then
 fi
 
 n=$1
-echo "index, mean-time"
+echo "index, mean-time, variance, std-deviation."
 elements=`ls -l test_*.click|wc -l`
 for k in $(seq 1 $elements)
 do
@@ -24,6 +24,6 @@ do
 	/usr/bin/time -v  ../userlevel/click --threads=4 $j &>> $j.out
     done
     
-    mean_time=`cat $j.out| grep "wall clock" | egrep -o "[0-9]+\.[0-9]+"  | ./mean`  
+    mean_time=`cat $j.out| grep "wall clock" | egrep -o "[0-9]+\.[0-9]+"  | ./mean -v`  
     echo "${k}, $mean_time"
 done

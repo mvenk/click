@@ -31,7 +31,7 @@ PoundRadixIPLookup106::run_task(Task *) {
 	      IPAddress(htonl(0xFFFFFF00)),
 	      IPAddress(htonl(0x01010101)),
 	      1);
-    for(int k=0;k<100;k++)
+    for(int k=0;k<10000;k++)
       {
 	_l->add_route(r, true, 0, 0);
 	_l->remove_route(r,0,0);
