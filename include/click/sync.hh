@@ -460,6 +460,91 @@ ReadWriteLock::release_write()
 #endif
 }
 
+/* A user-level Read Write Lock*/
+class ReadWriteLockUser { public:
+    inline ReadWriteLockUser();
+    inline ~ReadWriteLockUser();
+
+    inline void acquire_read();
+    inline void release_read();
+    inline bool attempt_read();
+
+    inline void acquire_write();
+    inline void release_write();
+    inline bool attempt_write();
+
+private:
+    atomic_uint32_t _readers;
+    Spinlock _lock;    
+};
+
+inline
+ReadWriteLockUser :: ReadWriteLockUser() 
+{
+    _readers = 0;
+}
+
+inline
+ReadWriteLockUser :: ~ReadWriteLockUser()
+{
+}
+
+inline void
+ReadWriteLockUser::acquire_read()
+{
+    // acquire lock to prevent writers
+    _lock.acquire();
+    _readers++;
+    _lock.release();
+}
+
+inline bool
+ReadWriteLockUser::attempt_read() 
+{
+    bool result = _lock.attempt();
+    if(result) {
+	_readers++;
+	_lock.release();
+	return true;
+    }
+    return false;
+}
+	
+
+inline void
+ReadWriteLockUser::release_read()
+{
+    _readers--;
+}
+
+inline void
+ReadWriteLockUser::acquire_write()
+{
+    // acquire lock to block any future readers
+    _lock.acquire();
+    // spin till all readers are done
+    while(_readers > 0) asm volatile ("" : : : "memory");
+}
+
+inline bool
+ReadWriteLockUser::attempt_write()
+{
+    if(_lock.attempt()) {
+	if(_readers == 0)
+	    return true;
+	else
+	    _lock.release();
+    }
+    return false;
+}
+    
+inline void
+ReadWriteLockUser::release_write()
+{
+    _lock.release();
+}
+
+
 CLICK_ENDDECLS
 #undef SPINLOCK_ASSERTLEVEL
 #endif
