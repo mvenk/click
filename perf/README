@@ -249,3 +249,14 @@ RadixIPLookup21		Branching factor of 2^12 at first level and 2^5 after
 			case, then we directly add that key as a skip
 			key.
   
+RadixIPLookup22		Primary branching factor of 16 and secondary branching
+			factor of 4.
+
+RadixIPLookup23		Primary branching factor of 16 and secondary branching
+			factor of 16.
+
+RadixIPLookup24		Primary branching factor of 8 and secondary branching
+			factor of 8.
+
+RadixIPLookup25		Primary branching factor of 16 and secondary branching
+			factor of 5.
