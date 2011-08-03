@@ -136,7 +136,7 @@ RadixIPLookup24::Radix::change(uint32_t addr, uint32_t mask, int key, bool set)
 
 
 RadixIPLookup24::RadixIPLookup24()
-    : _vfree(-1), _default_key(0), _radix(Radix::make_radix(8, 256))
+    : _vfree(-1), _default_key(0), _radix(Radix::make_radix(24, 256))
 {
 }
 
