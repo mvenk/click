@@ -260,3 +260,7 @@ RadixIPLookup24		Primary branching factor of 8 and secondary branching
 
 RadixIPLookup25		Primary branching factor of 16 and secondary branching
 			factor of 5.
+
+RadixIPLookup26		Branching factor of 2^16 at the first level and 2^4 after
+			that derivable fields removed. _bitshift and _nbuckets
+			calculated using static array.
