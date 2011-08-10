@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
 	  t++;
   }
   if(print_var)
-	  printf("%f %f %f\n", xbar_t, xvar_t, xstddev_t);
+	  printf("%f, %f, %f\n", xbar_t, xvar_t, xstddev_t);
   else 
 	  printf("%f\n", xbar_t);
 

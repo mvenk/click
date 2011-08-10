@@ -16,3 +16,5 @@ autom4te*
 +*
 depcomp
 installch
+race/*.click.out
+*.click.out

@@ -128,3 +128,26 @@ During an update, it's wrong to have:
 	 
        - The same key to be on reclaim_later and on the _vfree list.
        	 This could potentially cause the updaters to use stale data.
+
+7/26/2011
+
+	On running the test_10.click test, on the rcu branch, we
+	observed that it's taking a lot more time than other
+	tests. test_10.click has 4 writers and no readers. It has the
+	rcu framework in place. We found that this runs much slower
+	also in comparison to the case when there are 4 writers but
+	doesn't use the RCU framwork (present in the rcu_master_tests
+	branch).
+
+	Our speculation is that the extreme degradation in performance
+	of test_10.click is due to the reclaim operation. The reclaim
+	operation needs the lock on the vector. This would not have
+	been an issue if the reclaimation process didn't take much
+	time, but due PoundRadixIPLookups nature (which does around
+	10,000 updates per run_task call) the number of items which
+	need to be reclaimed is large (around 40,000 items). All these
+	items need to be added to the free list, which again take
+	valuable time. Due to these reasons all the other threads are
+	left waiting for the lock for a long time when even a single
+	thread acquires the lock and performs the reclaimation.
+

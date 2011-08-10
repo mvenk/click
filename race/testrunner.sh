@@ -7,14 +7,14 @@
 
 if [ $# -ne 1 ]; then
     echo "Usage: "
-    echo "$0 <n> <input_prefix> <conf> <dump_file>"
+    echo "$0 <n> "
     exit
 fi
 
 n=$1
 echo "index, mean-time, variance, std-deviation."
-elements=`ls -l test_*.click|wc -l`
-for k in $(seq 1 $elements)
+elements=`ls -1 test_*.click | cut -d_ -f2 | sed -e 's/\.click//g' | sort -n`
+for k in $elements
 do
     j="test_$k.click"
     >$j.out
