@@ -264,3 +264,9 @@ RadixIPLookup25		Primary branching factor of 16 and secondary branching
 RadixIPLookup26		Branching factor of 2^16 at the first level and 2^4 after
 			that derivable fields removed. _bitshift and _nbuckets
 			calculated using static array.
+
+RadixIPLookup27		Branching factor of 2^16 at first level and
+			2^4 after that. Derivable fields
+			removed. Fields allocated using custom allocator.
+
+
