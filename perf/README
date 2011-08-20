@@ -261,12 +261,14 @@ RadixIPLookup24		Primary branching factor of 8 and secondary branching
 RadixIPLookup25		Primary branching factor of 16 and secondary branching
 			factor of 5.
 
-RadixIPLookup26		Branching factor of 2^16 at the first level and 2^4 after
-			that derivable fields removed. _bitshift and _nbuckets
-			calculated using static array.
+RadixIPLookup26 	Branching factor of 2^16 at the first level and 2^4
+			after that derivable fields removed. _bitshift
+			and _nbuckets calculated using static array.
 
 RadixIPLookup27		Branching factor of 2^16 at first level and
 			2^4 after that. Derivable fields
 			removed. Fields allocated using custom allocator.
 
-
+RadixIPLookup28 	Same as RadixIPLookup19 (uses a compressed vector to
+			just store unique (gw, port) pairs) but with a
+			branching factor of (16, 4)
