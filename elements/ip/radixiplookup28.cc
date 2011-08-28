@@ -77,8 +77,8 @@ class RadixIPLookup28::Radix { public:
     friend class RadixIPLookup28;
 
 };
-const int RadixIPLookup26::Radix::_bitshift [5] = {16, 12, 8, 4, 0};
-const int RadixIPLookup26::Radix::_nbuckets [5] = {65536, 16, 16, 16, 16};
+const int RadixIPLookup28::Radix::_bitshift [5] = {16, 12, 8, 4, 0};
+const int RadixIPLookup28::Radix::_nbuckets [5] = {65536, 16, 16, 16, 16};
 
 
     

@@ -68,11 +68,6 @@ elements.
 LinearIPLookup, SortedIPLookup, LinuxIPLookup
 */
 
-struct GWPort {
-    IPAddress gw;
-    int32_t port;
-};
-
 
 class RadixIPLookup28 : public IPRouteTable { public:
 
@@ -93,6 +88,11 @@ class RadixIPLookup28 : public IPRouteTable { public:
     String dump_routes();
 
   private:
+	struct GWPort {
+    	IPAddress gw;
+    	int32_t port;
+	};
+
 
     static inline int32_t combine_key(int32_t key, int32_t lookup_key) {
 	assert(lookup_key <= 0xff);
