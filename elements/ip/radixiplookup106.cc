@@ -312,7 +312,6 @@ RadixIPLookup106::reclaim_v()
     _vlock.acquire();
     //click_chatter("Acquired _vlock in radixiplookup reclaim_v");
     while(!_reclaim_now.empty()) {
-	click_chatter("Reclaiming %d, total %d",_reclaim_now.front(),_reclaim_now.size());
 	mark_as_free(_reclaim_now.front());
 	_reclaim_now.pop_front();
     }        
@@ -320,7 +319,6 @@ RadixIPLookup106::reclaim_v()
     _reclaim_now = _reclaim_later;
     _reclaim_later = temp;
 	
-    click_chatter("reclaim-now size: %d, reclaim-later size: %d",_reclaim_now.size(),_reclaim_later.size());
     // If there is nothing to free in the next quiescent state
     // we unschedule ourselves.
     if(_reclaim_now.empty()) {
