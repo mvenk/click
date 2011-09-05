@@ -21,9 +21,12 @@ BucketArray<T>::~BucketArray() {
   */
 }
 
+
+
 template <class T> inline int
 BucketArray<T>::push_back(const T& x) 
 {
+  _mutex.lock();
   _lock.acquire();
   uint32_t oldn = _nelems;
   if(oldn < capacity() || reserve()) {

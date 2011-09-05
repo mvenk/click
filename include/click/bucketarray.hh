@@ -3,6 +3,7 @@
 #include <click/sync.hh>
 #include <click/reclaimable.hh>
 #include <click/reclaimhook.hh>
+#include <click/futex.hh>
 CLICK_DECLS
 
 template <class T>
@@ -82,6 +83,7 @@ private:
   // keeps track of the number of bucket arrays
   uint32_t _narrays;
   Spinlock _lock;
+  Futex_mutex _mutex;
   // RCU
   // ReclaimHook _reclaimhook;
   Vector<void*> _reclaim_now;
