@@ -17,12 +17,15 @@ fi
 input_prefix=$1
 conf=$2
 ip_file=$3
-
+arch=`python -c "import platform; print platform.architecture()[0]"`
+date=`date +"%b.%d.%Y"`
 ./routingtable_replicator.sh $input_prefix $conf $ip_file
 elements=`cat $conf | grep -v "#"`
+out_dir=$conf
 for k in $elements
 do
     radix="$input_prefix.radix$k.click"
-    out="cachegrind.$input_prefix.radix$k.out"
-    valgrind --tool=cachegrind --cachegrind-out-file=$out ../userlevel/click $radix 
+    out="cachegrind.$input_prefix.radix$k.$arch.$date.out"
+	mkdir -p out/$out_dir
+    valgrind --tool=cachegrind --cachegrind-out-file=out/$out_dir/$out ../userlevel/click $radix 
 done

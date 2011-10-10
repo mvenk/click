@@ -1,7 +1,0 @@
-index, setup-time(s), setup-memory(kb), radix-time(s),radix-memory(kb),setup-filename,radix-filename
-1, 0.464000, 171801.600000, 5.972000, 171803.200000, 366k.setup1.click, 366k.radix1.click
-direct, 0.709000, 306265.600000, 6.039000, 306264.000000, 366k.setupdirect.click, 366k.radixdirect.click
-range, 0.768000, 306425.600000, 5.643000, 306428.800000, 366k.setuprange.click, 366k.radixrange.click
-7, 0.520000, 303080.000000, 5.288000, 303081.600000, 366k.setup7.click, 366k.radix7.click
-13, 0.520000, 303081.600000, 5.278000, 303081.600000, 366k.setup13.click, 366k.radix13.click
-19, 0.520000, 303083.200000, 5.484000, 303083.200000, 366k.setup19.click, 366k.radix19.click
