@@ -11,7 +11,7 @@ all: 167k 1m_gt20 1m_32 366k 1m_20
 	./testrunner.sh $(n) $@ $(conf) 5mtest.dump | tee out/$(conf)/means.$@.$(ARCH).$(DATE).out
 
 1m_32:
-	mkdir -p $(conf)
+	mkdir -p out/$(conf)
 	./testrunner.sh $(n) $@ $(conf) 5mshuffle.dump | tee out/$(conf)/means.$@.$(ARCH).$(DATE).out
 
 
