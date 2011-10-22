@@ -183,7 +183,7 @@ RadixIPLookup16		Branching factor of 2^12 at first level and
 
 RadixIPLookup18 	Uses custom allocator. Super children are
 			indexed with the help of a separate hash
-			table.
+			table. Branching factor of 2^12 and then 2^5.
 
 RadixIPLookup19		Branching factor of 2^12 at first level and
 			2^5 after that. Derivable fields
@@ -272,3 +272,12 @@ RadixIPLookup27		Branching factor of 2^16 at first level and
 RadixIPLookup28 	Same as RadixIPLookup19 (uses a compressed vector to
 			just store unique (gw, port) pairs) but with a
 			branching factor of (16, 4)
+
+RadixIPLookup29     Same as RadixIPLookup21 (uses skip key) but with a branching
+            factor of (16,4) derivable fields removed
+
+RadixIPLookup30     Same as RadixIPLookup20 (uses has child) but with branching
+            factor of (16,4) derivable fields removed
+
+RadixIPLookup31     Same as RadixIPLookup16 (uses prefetcht0) but with branching
+            factor of (16,4) derivable fields removed.
