@@ -1,17 +1,17 @@
 conf=compare_all.conf
 n=10
-ARCH=$(shell python -c "import platform; print platform.architecture()[0]")
+ARCH=$(shell python -c "import platform; print platform.architecture()[0][0:2]")
 DATE=$(shell date +"%b.%d.%Y")
 
 all: 167k 1m_gt20 1m_32 366k 1m_20
 .PHONY: 167k 1m_gt20 1m_32 366k 1m_20
 
 167k 1m_gt20 366k 1m_20:
-	mkdir -p out/$(conf)
+	mkdir -p out/lookup_times/$(ARCH)/$(conf)
 	./testrunner.sh $(n) $@ $(conf) 5mtest.dump | tee out/$(conf)/means.$@.$(ARCH).$(DATE).out
 
 1m_32:
-	mkdir -p out/$(conf)
+	mkdir -p out/lookup_times/$(ARCH)/$(conf)
 	./testrunner.sh $(n) $@ $(conf) 5mshuffle.dump | tee out/$(conf)/means.$@.$(ARCH).$(DATE).out
 
 
