@@ -81,7 +81,7 @@ bool
 PoundRadixIPLookupM106::run_task(Task *) {
   initialize_rand();
   IPAddress ip, gw(0);
-  for(int k=0;k<100;k++)
+  for(int k=0;k<1000;k++)
     {
        IPRoute r =get_route_for_update();
        // call add_route with route, replace =true, oldroute = NULL, errhandler =NULL
