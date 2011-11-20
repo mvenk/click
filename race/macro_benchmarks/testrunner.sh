@@ -13,10 +13,10 @@ fi
 
 n=$1
 echo "index, mean-time, variance, std-deviation."
-elements=`ls -1 test_*.click | cut -d_ -f2 | sed -e 's/\.click//g' | sort -n`
+elements=`ls -1 167k_test_*.click | cut -d_ -f3 | sed -e 's/\.click//g' | sort -n`
 for k in $elements
 do
-    j="test_$k.click"
+    j="167k_test_$k.click"
     >$j.out
     for i in $(seq 1 $n);
     do
