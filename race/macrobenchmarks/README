@@ -1,0 +1,44 @@
+SUMMARY
+=======
+
+This folder contains macro-benchmarks to test the performance of competing
+synchronization strategies within Click for IP Lookup. The synchronization
+strategies benchmarked are: RCU, RW lock, mutex and no locking.
+
+RUNNING TESTS
+=============
+
+It's better to run the tests through the Makefile, because we like abusing make
+for everything. 
+
+        make n=5
+
+Issuing the above command will run the tests 5 times, average the results and
+put them in a log file. The log files can be found in the folder named "out."
+
+NAMING CONVENTION
+=================
+
+The naming convention for the .click files found in this folder is as follows:
+
+    <routing table>_test_<strategy>_<readers>r_<writers>w.click
+
+"routing table" is one of:
+    167k    -- 167k route routing table from routeviews.
+    366k    -- 366k route routing table from routeviews.
+    1m_20   -- All 1 million /20 routes.
+    1m_gt20 -- 1 million routes uniformly distributed over prefixes > /20.
+    1m_32   -- 1 million routes uniformly distribute over the /32 prefix.
+
+"strategy" is one of:
+    rwl -- Reader writer lock
+    rcu -- Read Copy Update
+    mut -- Mutex
+    non -- No locking
+
+"readers" is the number of readers and similarly "writers" is the number of
+writers. 
+
+For example, "167k_test_1r_0w_non.click" is a test run on the 167k routing table
+with 1 reader, 0 writers and does not use any locking.
+
