@@ -19,9 +19,6 @@ class ReadRadixIPLookupM : public Element { public:
   bool run_task(Task *task);
 
 private:
-  inline int get_table_size(void);
-  void initialize_rand(void);
-  IPAddress get_ip_for_lookup(void);
 
   RadixIPLookup *_l;
   Task _task;

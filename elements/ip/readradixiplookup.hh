@@ -2,6 +2,7 @@
 #define CLICK_READRADIXIPLOOKUP_HH
 #include <click/element.hh>
 #include <click/task.hh>
+#include "167k_input.hh"
 CLICK_DECLS
 class RadixIPLookup;
 

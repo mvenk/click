@@ -2,6 +2,7 @@
 #define CLICK_READRADIXIPLOOKUP106M_HH
 #include <click/element.hh>
 #include <click/task.hh>
+#include "167k_input.hh"
 CLICK_DECLS
 class RadixIPLookup106;
 
@@ -19,9 +20,6 @@ class ReadRadixIPLookupM106 : public Element { public:
   bool run_task(Task *task);
 
 private:
-  inline int get_table_size(void);
-  void initialize_rand(void);
-  IPAddress get_ip_for_lookup(void);
 
   RadixIPLookup106 *_l;
   Task _task;
