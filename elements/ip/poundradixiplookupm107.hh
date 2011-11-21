@@ -18,12 +18,6 @@ class PoundRadixIPLookupM107 : public Element { public:
 
   bool run_task(Task *task);
 
-
-
-  inline int get_table_size(void);
-  void initialize_rand(void);
-  IPRoute get_route_for_update(void);
-
 private:
   RadixIPLookup107 *_l;
   Task _task;
