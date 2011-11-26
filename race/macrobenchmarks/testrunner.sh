@@ -31,6 +31,6 @@ do
 	/usr/bin/time -v  ../../userlevel/click --threads=4 $click_file &>> $out/$log_file
     done
     
-    mean_time=`cat ${out}/${log_file}| grep "wall clock" | egrep -o "[0-9]+\.[0-9]+" | ../mean -v`
+    mean_time=`cat ${out}/${log_file}| grep "wall clock" | egrep -o "[0-9]+\.[0-9]+" | ./mean -v`
     echo "${k} $mean_time"
 done
