@@ -6,11 +6,15 @@ Idle
  -> Idle;
 
 reader :: ReadRadixIPLookup(r);
-writer :: PoundRadixIPLookup(r);
+reader1 :: ReadRadixIPLookup(r);
+reader2 :: ReadRadixIPLookup(r);
+reader3 :: ReadRadixIPLookup(r);
 
 StaticThreadSched(
 	reader 0,
-	writer 1
+	reader1 1,
+	reader2 2,
+	reader3 3
 );
 
 DriverManager(stop);
