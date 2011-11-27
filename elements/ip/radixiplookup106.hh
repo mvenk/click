@@ -7,6 +7,7 @@
 #include "iproutetable.hh"
 #include <click/bucketarray.hh>
 #include <click/list.hh>
+#include <click/dequeue.hh>
 #include <click/timer.hh>
 #include <click/reclaimable.hh>
 #include <click/reclaimhook.hh>
@@ -108,8 +109,8 @@ class RadixIPLookup106 : public IPRouteTable, Reclaimable { public:
     Spinlock _vlock;
     Spinlock _rlock;
 
-    Vector<int> _reclaim_now;
-    Vector<int> _reclaim_later;
+    DEQueue<int> _reclaim_now;
+    DEQueue<int> _reclaim_later;
 
 
     ReclaimHook _reclaimhook;

@@ -311,17 +311,17 @@ RadixIPLookup106::reclaim_v()
     //click_chatter("In radixiplookup reclaim_v");
     _vlock.acquire();
     //click_chatter("Acquired _vlock in radixiplookup reclaim_v");
-    while(!_reclaim_now.empty()) {
+    while(_reclaim_now.size()!=0) {
 	mark_as_free(_reclaim_now.front());
 	_reclaim_now.pop_front();
     }        
-    Vector<int> temp = _reclaim_now;
+    DEQueue<int> temp = _reclaim_now;
     _reclaim_now = _reclaim_later;
     _reclaim_later = temp;
 
     // If there is nothing to free in the next quiescent state
     // we unschedule ourselves.
-    if(_reclaim_now.empty()) {
+    if(_reclaim_now.size()==0) {
 	_reclaimhook.unschedule();
     }
     _v.reclaim_l();
