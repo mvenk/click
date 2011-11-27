@@ -6,16 +6,18 @@
 # out   = directory for output log files
 
 
-if [ $# -ne 2 ]; then
+if [ $# -ne 3 ]; then
     echo "Usage: "
-    echo "$0 <n> <out>"
+    echo "$0 <threads> <n> <out>"
+    echo "threads = number of threads the test can use"
     echo "n   = number of times the test should be run"
     echo "out = directory for output log files"
     exit
 fi
 
-n=$1
-out=$2
+threads=$1
+n=$2
+out=$3
 
 echo "index, mean-time, variance, std-deviation"
 elements=`ls -1 test_*.click | cut -d_ -f2,3,4,5 | sed -e 's/\.click//g'`
@@ -28,7 +30,7 @@ do
     for i in $(seq 1 $n);
     do
 	echo "==Run ${i}==">> $out/$log_file
-	/usr/bin/time -v  ../../userlevel/click --threads=4 $click_file &>> $out/$log_file
+	/usr/bin/time -v  ../../userlevel/click --threads=$threads $click_file &>> $out/$log_file
     done
     
     mean_time=`cat ${out}/${log_file}| grep "wall clock" | egrep -o "[0-9]+\.[0-9]+" | ./mean -v`

@@ -20,7 +20,6 @@
  */
 
 #include <click/config.h>
-#include <malloc.h>
 #include <click/ipaddress.hh>
 #include <click/confparse.hh>
 #include <click/error.hh>
@@ -79,8 +78,7 @@ class RadixIPLookup6::Radix { public:
 RadixIPLookup6::Radix*
 RadixIPLookup6::Radix::make_radix(int bitshift, int n)
 {
-    int size = sizeof(Radix) + n * sizeof(Child);
-    Radix* r = (Radix*)memalign(64,size);
+    if (Radix* r = (Radix*) new unsigned char[sizeof(Radix) + n * sizeof(Child) + (n - 2) * sizeof(int)])
     if(r)
 	{
 	    r->_superchildren = (int *)new unsigned char[(n - 2) * sizeof(int)];

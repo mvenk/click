@@ -18,8 +18,7 @@
  * summary of the Click LICENSE file; the license in that file is
  * legally binding.
  */
-#include <stdio.h>
-#include <malloc.h>
+
 #include <click/config.h>
 #include <click/ipaddress.hh>
 #include <click/confparse.hh>
@@ -77,10 +76,7 @@ class RadixIPLookup2::Radix { public:
 RadixIPLookup2::Radix*
 RadixIPLookup2::Radix::make_radix(int bitshift, int n)
 {
-    int size = sizeof(Radix) + n * sizeof(Child) + (n - 2) * sizeof(int);
-    Radix*r = (Radix*)memalign(64,size);
-    if (r) {
-	//printf("\nAddress: %x, memory aligned r mod 64 ? %d size %d",(int)r,(int)r % 64,size);
+    if (Radix* r = (Radix*) new unsigned char[sizeof(Radix) + n * sizeof(Child) + (n - 2) * sizeof(int)]) {
 	r->_bitshift = bitshift;
 	r->_n = n;
 	r->_nchildren = 0;
@@ -97,7 +93,7 @@ RadixIPLookup2::Radix::free_radix(Radix* r)
 	for (int i = 0; i < r->_n; i++)
 	    if (r->_children[i].child)
 		free_radix(r->_children[i].child);
-    free(r);
+    delete[] (unsigned char *)r;
 }
 
 int
@@ -108,7 +104,7 @@ RadixIPLookup2::Radix::change(uint32_t addr, uint32_t mask, int key, bool set)
     // check if change only affects children
     if (mask & ((1U << _bitshift) - 1)) {
 	if (!_children[i1].child
-	    && (_children[i1].child = make_radix(_bitshift - 3, 8)))
+	    && (_children[i1].child = make_radix(_bitshift - 4, 16)))
 	    ++_nchildren;
 	if (_children[i1].child)
 	    return _children[i1].child->change(addr, mask, key, set);

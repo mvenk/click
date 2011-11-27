@@ -19,7 +19,6 @@
  * legally binding.
  */
 #include <stdio.h>
-#include <malloc.h>
 #include <click/config.h>
 #include <click/ipaddress.hh>
 #include <click/confparse.hh>
