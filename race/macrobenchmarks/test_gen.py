@@ -33,7 +33,7 @@ for opt, arg in options:
                print "invalid sync_type"
     else:
         print "-r readers -w writers -t (m/M) --sync=(rwl/rcu/non)"
-
+        sys.exit()
 
 element = "RadixIPLookup"
 element_no = ""
@@ -81,6 +81,7 @@ for i in range(0,writers,1):
                thread_count = thread_count+1
 
 body2 += ");\n"
+body2 += "DriverManager(stop);\n"
 outputfile = open(filename,'w')
 outputfile.write(router_info)
 outputfile.write(body1)

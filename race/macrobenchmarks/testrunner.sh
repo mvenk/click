@@ -36,7 +36,7 @@ do
     for i in $(seq 1 $n);
     do
 	echo "==Run ${i}==">> $out/$log_file
-	/usr/bin/time  ../../userlevel/click --threads=$threads $click_file 2> $out/$log_file
+	/usr/bin/time -p ../../userlevel/click --threads=$threads $click_file 2>> $out/$log_file
     done
     
     mean_time=`cat ${out}/${log_file}| grep "real" | egrep -o "[0-9]+\.[0-9]+" | ./mean -v`
