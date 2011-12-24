@@ -31,9 +31,10 @@ PoundRadixIPLookupM107::initialize(ErrorHandler *errh) {
 bool
 PoundRadixIPLookupM107::run_task(Task *) {
   IPAddress ip, gw(0);
-  for(int k=0;k<1000;k++)
+  int  n = 1000;
+  for(int k=0;k<n;k++)
     {
-       IPRoute r =get_route_for_update(k%1000);
+       IPRoute r =get_route_for_update(k);
        // call add_route with route, replace =true, oldroute = NULL, errhandler =NULL
       _l->add_route(r, true, 0, 0);
     }

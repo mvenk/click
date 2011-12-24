@@ -9,6 +9,9 @@ struct input_table{
     int subnet_mask;
 };
 
+// Then number of actual routing table routes it accesses.
+const int maxroutes = 100000;
+
 const struct input_table _table[] =
 {
 {0x92098d0, 0xffffe000},
@@ -100022,12 +100025,14 @@ get_table_size(void){
 
 inline IPAddress 
 get_ip_for_lookup(int i){
-    return IPAddress(_table[i%get_table_size()].ip);
+  i = i % maxroutes;
+  return IPAddress(_table[i%get_table_size()].ip);
 }
 
 inline IPRoute
 get_route_for_update(int i){
-    return IPRoute (IPAddress(_table[i%get_table_size()].ip),
+   i = i % maxroutes;
+   return IPRoute (IPAddress(_table[i%get_table_size()].ip),
 	      IPAddress(_table[i%get_table_size()].subnet_mask),
 	      IPAddress(htonl(0x01010101)),
 	       0);
