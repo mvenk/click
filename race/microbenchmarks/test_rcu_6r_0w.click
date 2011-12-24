@@ -6,12 +6,16 @@ Idle -> rt :: RadixIPLookup106(
 reader0::ReadRadixIPLookup106(rt);
 reader1::ReadRadixIPLookup106(rt);
 reader2::ReadRadixIPLookup106(rt);
-updater0::PoundRadixIPLookup106(rt);
+reader3::ReadRadixIPLookup106(rt);
+reader4::ReadRadixIPLookup106(rt);
+reader5::ReadRadixIPLookup106(rt);
 
 StaticThreadSched(
 reader0 0,
 reader1 1,
 reader2 2,
-updater0 3,
+reader3 3,
+reader4 4,
+reader5 5,
 );
 DriverManager(stop);
