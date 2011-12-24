@@ -23,7 +23,6 @@ echo "index, mean-time, variance, std-deviation"
 elements=`ls -1 test_*.click | cut -d_ -f2,3,4 | sed -e 's/\.click//g'`
 for k in $elements
 do
-    echo $k
     reader_threads=`echo $k|cut -d '_' -f 2|cut -d 'r' -f 1`
     writer_threads=`echo $k|cut -d '_' -f 3|cut -d 'w' -f 1`
     threads=$[$writer_threads + $reader_threads]

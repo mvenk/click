@@ -6,7 +6,7 @@ DATE=$(shell date +"%T_%b_%d_%Y")
 OUTDIR=out
 micro: 
 	mkdir -p $(OUTDIR) 
-	./testrunner.sh $(threads) $(n) $(OUTDIR) | tee $(OUTDIR)/testsummary_rcu_$(DATE).out
+	./testrunner.sh $(threads) $(n) $(OUTDIR) | tee $(OUTDIR)/testsummary_micro_rcu_$(DATE).out
 
 mean: mean.c
 	gcc -o $@ -lm $< 	
