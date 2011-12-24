@@ -5,14 +5,8 @@ Idle -> rt :: RadixIPLookup107(
   -> Idle;
 reader0::ReadRadixIPLookup107(rt);
 reader1::ReadRadixIPLookup107(rt);
-reader2::ReadRadixIPLookup107(rt);
-reader3::ReadRadixIPLookup107(rt);
-reader4::ReadRadixIPLookup107(rt);
 
 StaticThreadSched(
 reader0 0,
 reader1 1,
-reader2 2,
-reader3 3,
-reader4 4,
 );
