@@ -10,3 +10,4 @@ StaticThreadSched(
 reader0 0,
 reader1 1,
 );
+DriverManager(stop);

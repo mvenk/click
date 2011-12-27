@@ -14,3 +14,4 @@ reader1 1,
 reader2 2,
 reader3 3,
 );
+DriverManager(stop);

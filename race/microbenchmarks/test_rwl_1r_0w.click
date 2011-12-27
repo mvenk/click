@@ -8,3 +8,4 @@ reader0::ReadRadixIPLookup107(rt);
 StaticThreadSched(
 reader0 0,
 );
+DriverManager(stop);
