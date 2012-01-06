@@ -8,6 +8,9 @@ OUTDIR=out
 1w:   outdir 
 	./testrunner.sh $(threads) $(n) $(OUTDIR) rwl v 1 | tee $(OUTDIR)/testsummary_macro_rwl_vr_1w.out
 
+1wprofile: outdir
+	./profilerunner.sh $(threads) $(n) $(OUTDIR) rwl v 1 | tee $(OUTDIR)/testsummary_macro_rwl_vr_1w.\out
+
 2w:  outdir
 	./testrunner.sh $(threads) $(n) $(OUTDIR) rwl v 2 | tee $(OUTDIR)/testsummary_macro_rwl_vr_2w.out
 
