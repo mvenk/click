@@ -14,6 +14,9 @@ OUTDIR=out
 1r:  outdir
 	./testrunner.sh $(threads) $(n) $(OUTDIR) rcu 1 v | tee $(OUTDIR)/testsummary_macro_rcu_1r_vw.out
 
+profile1w:  outdir
+	./profilerunner.sh $(threads) $(n) $(OUTDIR) rcu 1 v
+
 outdir:
 	mkdir -p $(OUTDIR) >@
 
