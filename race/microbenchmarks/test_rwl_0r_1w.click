@@ -8,3 +8,4 @@ updater0::PoundRadixIPLookup107(rt);
 StaticThreadSched(
 updater0 0,
 );
+DriverManager(stop);
