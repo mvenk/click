@@ -1,15 +1,11 @@
-// 1 writer - using the RCU (fine grained locking version of RadixIPLookup).
-Idle
- -> r :: RadixIPLookup106(
-		1.1.1.0/32  8.1.1.1 0,
-		0.0.0.0/0   8.1.1.1 0,
-		) 
- -> Idle;
-
-writer:: PoundRadixIPLookup106(r);
+Idle -> rt :: RadixIPLookup106(
+                1.1.1.0/32  8.1.1.1 0,
+                 0.0.0.0/0   8.1.1.1 0,
+                 ) 
+  -> Idle;
+updater0::PoundRadixIPLookup106(rt);
 
 StaticThreadSched(
-	writer 0
+updater0 0,
 );
-
 DriverManager(stop);
