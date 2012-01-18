@@ -20,6 +20,9 @@ OUTDIR=out
 profile1w:  outdir
 	./profilerunner.sh $(threads) $(n) $(OUTDIR) rcu 1 v
 
+profile0r:  outdir
+	./profilerunner.sh $(threads) $(n) $(OUTDIR) rcu 0 v
+
 outdir:
 	mkdir -p $(OUTDIR) >@
 
