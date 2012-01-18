@@ -57,12 +57,12 @@ GENERIC_OBJS = string.o straccum.o nameinfo.o \
 	bitvector.o vectorv.o templatei.o bighashmap_arena.o hashallocator.o \
 	ipaddress.o ipflowid.o etheraddress.o \
 	packet.o \
-	error.o timestamp.o glue.o task.o timer.o atomic.o fromfile.o gaprate.o \
+	error.o timestamp.o glue.o task.o timer.o atomic.o sync.o fromfile.o gaprate.o \
 	element.o \
 	confparse.o variableenv.o lexer.o elemfilter.o routervisitor.o \
 	routerthread.o router.o master.o handlercall.o notifier.o \
 	integers.o md5.o crc32.o in_cksum.o iptable.o \
-	archive.o userutils.o driver.o allocchunk.o\
+	archive.o userutils.o driver.o allocchunk.o \
 	$(EXTRA_DRIVER_OBJS)
 
 EXTRA_DRIVER_OBJS = 
@@ -73,8 +73,8 @@ STD_ELEMENT_OBJS = addressinfo.o alignmentinfo.o \
 OBJS = $(ELEMENT_OBJS) $(ELEMENTSCONF).o click.o
 
 CPPFLAGS =  -D__MTCLICK__ -DCLICK_USERLEVEL
-CFLAGS = -g -pg -O2
-CXXFLAGS = -g -pg -O2
+CFLAGS = -g -O2
+CXXFLAGS = -g -O2
 DEPCFLAGS = -MD -MP
 
 DEFS = -DHAVE_CONFIG_H

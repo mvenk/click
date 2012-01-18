@@ -57,12 +57,12 @@ GENERIC_OBJS = string.o straccum.o nameinfo.o \
 	bitvector.o vectorv.o templatei.o bighashmap_arena.o hashallocator.o \
 	ipaddress.o ipflowid.o etheraddress.o \
 	packet.o \
-	error.o timestamp.o glue.o task.o timer.o atomic.o fromfile.o gaprate.o \
+	error.o timestamp.o glue.o task.o timer.o atomic.o sync.o fromfile.o gaprate.o \
 	element.o \
 	confparse.o variableenv.o lexer.o elemfilter.o routervisitor.o \
 	routerthread.o router.o master.o handlercall.o notifier.o \
 	integers.o md5.o crc32.o in_cksum.o iptable.o \
-	archive.o userutils.o driver.o allocchunk.o\
+	archive.o userutils.o driver.o allocchunk.o \
 	$(EXTRA_DRIVER_OBJS)
 
 EXTRA_DRIVER_OBJS = @EXTRA_DRIVER_OBJS@

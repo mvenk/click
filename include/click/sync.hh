@@ -1,3 +1,4 @@
+
 // -*- c-basic-offset: 4 -*-
 #ifndef CLICK_SYNC_HH
 #define CLICK_SYNC_HH
@@ -56,7 +57,7 @@ class Spinlock { public:
     inline Spinlock();
     inline ~Spinlock();
 
-    inline void acquire();
+    void acquire();
     inline void release();
     inline bool attempt();
     inline bool nested() const;
@@ -92,29 +93,13 @@ Spinlock::~Spinlock()
 #endif
 }
 
-/** @brief Acquires the Spinlock.
- *
- * On return, this thread has acquired the lock.  The function will spin
- * indefinitely until the lock is acquired.  It is OK to acquire a lock you
- * have already acquired, but you must release it as many times as you have
- * acquired it.
- */
-inline void
-Spinlock::acquire()
-{
-#if CLICK_MULTITHREAD_SPINLOCK
-    click_processor_t my_cpu = click_get_processor();
-    if (_owner != my_cpu) {
-	while (_lock.swap(1) != 0)
-	    while (_lock != 0)
-		asm volatile ("" : : : "memory");
-	_owner = my_cpu;
-    }
-    _depth++;
-#endif
-}
 
-/** @brief Attempts to acquire the Spinlock.
+
+
+
+
+
+/** @BRIEF Attempts to acquire the Spinlock.
  * @return True iff the Spinlock was acquired.
  *
  * This function will acquire the lock and return true only if the Spinlock
