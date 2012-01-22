@@ -1,12 +1,15 @@
 threads=8
 n=4
-all: 0wnon 0w 1w 1r 
+all: 0wnon 0w 1w 1r 0r
 ARCH=$(shell python -c "import platform; print platform.architecture()[0][0:2]")
 DATE=$(shell date +"%T_%b_%d_%Y")
 OUTDIR=out
 
 1w:   outdir 
 	./testrunner.sh $(threads) $(n) $(OUTDIR) rwl v 1 | tee $(OUTDIR)/testsummary_macro_rwl_vr_1w.out
+
+profile0w: outdir
+	./profilerunner.sh $(threads) $(n) $(OUTDIR) rwl v 0
 
 profile1w: outdir
 	./profilerunner.sh $(threads) $(n) $(OUTDIR) rwl v 1
