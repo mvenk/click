@@ -27,7 +27,7 @@ if [ $5 == 'v' ]; then
     maxreaders=$maxthreads
 else
     minreaders=$5
-    maxreaders=$(($5 +1))
+    maxreaders=$(($5))
 fi
 
 if [ $6 == 'v' ]; then
@@ -35,13 +35,13 @@ if [ $6 == 'v' ]; then
     maxwriters=$maxthreads
 else
     minwriters=$6
-    maxwriters=$(($6 +1))
+    maxwriters=$(($6))
 fi
 echo "index, mean-time, variance, std-deviation"
-for (( j = $minreaders; j < $maxreaders; j++ ))
+for (( j = $minreaders; j <= $maxreaders; j++ ))
 do
     reader_threads=$j
-    for (( m = $minwriters; m < $maxwriters; m++ ))
+    for (( m = $minwriters; m <= $maxwriters; m++ ))
     do
 	writer_threads=$m
 	threads=$[$writer_threads + $reader_threads]

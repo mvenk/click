@@ -1,6 +1,6 @@
 threads=8
 n=4
-all: 0w 1w 2w 1r
+all: 0w 1w  1r 0r
 ARCH=$(shell python -c "import platform; print platform.architecture()[0][0:2]")
 DATE=$(shell date +"%T_%b_%d_%Y")
 OUTDIR=out
