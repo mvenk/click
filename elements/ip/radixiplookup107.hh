@@ -79,12 +79,13 @@ class RadixIPLookup107 : public IPRouteTable { public:
     const char *processing() const		{ return PUSH; }
 
     void cleanup(CleanupStage);
-
+    
     int add_route(const IPRoute&, bool, IPRoute*, ErrorHandler *);
     int remove_route(const IPRoute&, IPRoute*, ErrorHandler *);
     int lookup_route(IPAddress, IPAddress&) const;    
     String dump_routes();
 
+    inline unsigned int  get_attempts()                  { return _lock.get_attempts();}
   private:
     
     class Radix;   

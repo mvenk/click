@@ -11,6 +11,12 @@ OUTDIR=out
 profile0w: outdir
 	./profilerunner.sh $(threads) $(n) $(OUTDIR) rwl v 0
 
+lockcount0w: outdir
+	./lockcountrunner.sh $(threads) $(n) $(OUTDIR) rwl v 0 |tee $(OUTDIR)/lockcountsummary_macro_rwl_vr_0w.out
+
+lockcount1w: outdir
+	./lockcountrunner.sh $(threads) $(n) $(OUTDIR) rwl v 1 |tee $(OUTDIR)/lockcountsummary_macro_rwl_vr_1w.out
+
 profile1w: outdir
 	./profilerunner.sh $(threads) $(n) $(OUTDIR) rwl v 1
 

@@ -60,11 +60,13 @@ class Spinlock { public:
     inline void release();
     inline bool attempt();
     inline bool nested() const;
+    inline atomic_uint32_t get_attempts() const;
 
 #if CLICK_MULTITHREAD_SPINLOCK
   private:
 
     atomic_uint32_t _lock;
+    atomic_uint32_t _attempt_count;
     int32_t _depth;
     click_processor_t _owner;
 #endif
@@ -79,6 +81,7 @@ Spinlock::Spinlock()
 #endif
 {
 #if CLICK_MULTITHREAD_SPINLOCK
+    _attempt_count = 0;
     _lock = 0;
 #endif
 }
@@ -90,6 +93,7 @@ Spinlock::~Spinlock()
     if (_depth != 0)
 	click_chatter(SPINLOCK_ASSERTLEVEL "Spinlock::~Spinlock(): assertion \"_depth == 0\" failed");
 #endif
+   
 }
 
 /** @brief Acquires the Spinlock.
@@ -105,9 +109,11 @@ Spinlock::acquire()
 #if CLICK_MULTITHREAD_SPINLOCK
     click_processor_t my_cpu = click_get_processor();
     if (_owner != my_cpu) {
-	while (_lock.swap(1) != 0)
+	while (_lock.swap(1) != 0) {
+	    _attempt_count++;
 	    while (_lock != 0)
 		asm volatile ("" : : : "memory");
+	}
 	_owner = my_cpu;
     }
     _depth++;
@@ -172,6 +178,14 @@ Spinlock::nested() const
 #else
     return false;
 #endif
+}
+
+/** @brief returns the total number of times an attempt was made to acquire the Spinlock
+ *  This is a global count which includes attempts made by all running threads.                                                       */
+inline atomic_uint32_t 
+Spinlock::get_attempts() const
+{    
+    return _attempt_count;
 }
 
 
@@ -472,6 +486,7 @@ class ReadWriteLockUser { public:
     inline void acquire_write();
     inline void release_write();
     inline bool attempt_write();
+    inline atomic_uint32_t get_attempts() const;
 
 private:
     atomic_uint32_t _readers;
@@ -487,6 +502,7 @@ ReadWriteLockUser :: ReadWriteLockUser()
 inline
 ReadWriteLockUser :: ~ReadWriteLockUser()
 {
+    //  click_chatter("lock attempts: %d", _lock.get_attempts());
 }
 
 inline void
@@ -545,6 +561,11 @@ ReadWriteLockUser::release_write()
 }
 
 
+inline atomic_uint32_t
+ReadWriteLockUser::get_attempts() const
+{
+    return _lock.get_attempts();
+}
 CLICK_ENDDECLS
 #undef SPINLOCK_ASSERTLEVEL
 #endif
