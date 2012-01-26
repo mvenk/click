@@ -1,0 +1,9 @@
+index, mean-time, variance, std-deviation
+rcu_1r_0w 39836
+rcu_2r_0w 39860
+rcu_3r_0w 39880
+rcu_4r_0w 39888
+rcu_5r_0w 39884
+rcu_6r_0w 39896
+rcu_7r_0w 39908
+rcu_8r_0w 39932
