@@ -38,7 +38,6 @@ ReadRadixIPLookupM107::run_task(Task *) {
         ip =get_ip_for_lookup(k);  
         port = _l->lookup_route(ip, gw);
     }
-    click_chatter("Attempts: %u",_l->get_attempts());
     _task.fast_reschedule();
     return true;
 }

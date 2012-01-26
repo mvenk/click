@@ -17,6 +17,12 @@ lockcount0w: outdir
 lockcount1w: outdir
 	./lockcountrunner.sh $(threads) $(n) $(OUTDIR) rwl v 1 |tee $(OUTDIR)/lockcountsummary_macro_rwl_vr_1w.out
 
+memusage0r:  outdir
+	./memusagerunner.sh $(threads) $(n) $(OUTDIR) rwl 0 v | tee $(OUTDIR)/memusagesummary_macro_rwl_0r_vw.out
+
+memusage0w:  outdir
+	./memusagerunner.sh $(threads) $(n) $(OUTDIR) rwl v 0 | tee $(OUTDIR)/memusagesummary_macro_rwl_vr_0w.out
+
 profile1w: outdir
 	./profilerunner.sh $(threads) $(n) $(OUTDIR) rwl v 1
 
