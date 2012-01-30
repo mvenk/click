@@ -33,7 +33,7 @@ ReadRadixIPLookupM::run_task(Task *) {
     int port = 0;
     int n = 100000;
     for(int k=0;k<n;k++) {
-        ip =get_ip_for_lookup(k%1000);  
+        ip =get_ip_for_lookup(k);  
         port = _l->lookup_route(ip, gw);
     }
     _task.fast_reschedule();
