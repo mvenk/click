@@ -75,7 +75,7 @@ Master::Master(int nthreads)
 
     // initialize epoch_counts array
     _thread_epoch_counts = new int[nthreads];
-    memset(_thread_epoch_counts, 0, sizeof(int)*nthreads);
+    memset(_thread_epoch_counts, 1, sizeof(int)*nthreads);
     
     // timer information
 #if CLICK_NS
@@ -457,6 +457,7 @@ Master::run_one_timer(Timer *t)
 }
 
 // RCU
+// Check for a grace period and reclaim memory.
 void 
 Master::try_reclaim()
 {
@@ -470,18 +471,18 @@ Master::try_reclaim()
     if(got_lock == false)
 	return;
 
-    _try_reclaim_count++;
     // check to see if we can increment the global epoch
+ 
     bool reclaim = true;
     RouterThread *t;
-    // click_chatter("Trying to reclaim");
+    // The condition for a grace period is that for all threads:
+    // either the thread has witnessed a quiescent state ( i.e.  _thread_epoch_counts[thread_id] == 0 )
+    // or the thread is blocked.
     int n = nthreads();
-    for(int i = 0; i < n ; i++){
+    for(int i = 0; i < n ; i++) {
 	t = thread(i);
 	int state = t->thread_state();
-	// click_chatter("%d: %s,now: %d, before: %d",i, t->thread_state_name(state).data(),t->epoch_count(), _thread_epoch_counts[i]);
-
-	if(_thread_epoch_counts[i] == t->epoch_count() && 
+	if(_thread_epoch_counts[i] ==1 && 
 	   (state == RouterThread::S_RUNTIMER ||
 	    state == RouterThread::S_RUNSELECT ||
 	    state == RouterThread::S_RUNSIGNAL ||
@@ -490,27 +491,37 @@ Master::try_reclaim()
 	    reclaim = false;
 	    break;
 	}
+	// click_chatter("%d: %s,now: %d, before: %d",i, t->thread_state_name(state).data(),t->epoch_count(), _thread_epoch_counts[i]);
     }
 
     if(reclaim){
 	_reclaim_count++;
-	//update all epoch numbers here
-	for(int i = 0; i < n; i++){
-		t = thread(i);
-		_thread_epoch_counts[i]=t->epoch_count();
-	}
-	_global_epoch++;
+	
+	// click_chatter("%d: %s,now: %d, before: %d",i, t->thread_state_name(state).data(),t->epoch_count(), _thread_epoch_counts[i]);_global_epoch++;
 	// click_chatter("Reclaiming");
-	for(int i = 0; i < _reclaim_hooks.size(); i++){
+	// reclaim memory
+	for(int i = 0; i < _reclaim_hooks.size(); i++) {
 	    if(_reclaim_hooks[i]->scheduled()) {
-		// click_chatter("Firing");
 		_reclaim_fire_count++;
 		_reclaim_hooks[i]->fire();
 	    }
-	} 
+	}
+	// reset the _thread_epoch_count variables for each thread.
+	asm volatile ("" : : : "memory");
+	for(int i = 0; i < n; i++) {
+	    t = thread(i);
+	    _thread_epoch_counts[i]= 1;
+	}
     }
 
     _try_reclaim_lock.release();
+}
+
+void
+Master:: update_local_epoch(int thread_id) {
+    asm volatile ("" : : : "memory");
+    _thread_epoch_counts[thread_id]=0;
+    asm volatile ("" : : : "memory");
 }
 
 void

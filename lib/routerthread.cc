@@ -74,7 +74,7 @@ RouterThread::RouterThread(Master *m, int id)
     : Task(Task::error_hook, 0),
 #endif
       _pending_head(0), _pending_tail(&_pending_head),
-      _master(m), _id(id), _epoch_count(0)
+      _master(m), _id(id)
 {
 #if HAVE_TASK_HEAP
     _pass = 0;
@@ -372,10 +372,10 @@ RouterThread::run_tasks(int ntasks)
 #endif
     for (; ntasks >= 0; --ntasks) {
       // Quiescent state
-      // Check thread epoch counters and see if they have the same value
-      // as before. Or if the threads are blocked. If so, reclaim memory.
+      // Update the local epoch to reflect the quiescent state. 
+      // Try and reclaim memory if a grace period is reached.
 
-      _epoch_count++;
+      _master->update_local_epoch(_id);
       _master->try_reclaim();
 
 #if HAVE_TASK_HEAP
@@ -555,7 +555,7 @@ RouterThread::driver()
   driver_loop:
 #endif
 
-    _epoch_count++;
+    _master->update_local_epoch(_id);;
     _master->try_reclaim();
 #if CLICK_DEBUG_SCHEDULING
     _driver_epoch++;
@@ -723,11 +723,6 @@ RouterThread::unschedule_router_tasks(Router* r)
     t->_prev = prev;
 #endif
     unlock_tasks();
-}
-
-int
-RouterThread::epoch_count() const {
-    return _epoch_count;
 }
 
 void

@@ -123,7 +123,6 @@ class RouterThread
     Master *_master;
     int _id;
 
-    int _epoch_count;
 
 #if CLICK_LINUXMODULE
     struct task_struct *_linux_task;

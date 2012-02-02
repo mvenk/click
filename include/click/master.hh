@@ -49,6 +49,7 @@ class Master { public:
 
     // RCU
     void try_reclaim();
+    void update_local_epoch(int id);
     void add_reclaim_hook(Hook *);
     void lock_reclaimers();
     void unlock_reclaimers();
@@ -113,7 +114,6 @@ class Master { public:
     bool check_driver();
 
     // RCU
-    int _global_epoch;
     Vector<Hook *> _reclaim_hooks;
     Spinlock _reclaim_lock;
     Spinlock _try_reclaim_lock;
