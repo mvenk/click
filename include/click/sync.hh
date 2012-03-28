@@ -474,98 +474,167 @@ ReadWriteLock::release_write()
 #endif
 }
 
-/* A user-level Read Write Lock*/
 class ReadWriteLockUser { public:
+
     inline ReadWriteLockUser();
+#if defined(CONFIG_SMP)
     inline ~ReadWriteLockUser();
+#endif
 
     inline void acquire_read();
-    inline void release_read();
     inline bool attempt_read();
-
+    inline void release_read();
     inline void acquire_write();
-    inline void release_write();
     inline bool attempt_write();
-    inline atomic_uint32_t get_attempts() const;
+    inline void release_write();
+    inline int get_attempts() {return 0;};
+#if  defined(CONFIG_SMP)
+  private:
+    // allocate 32 bytes (size of a cache line) for every member
+    struct lock_t {
+	Spinlock _lock;
+	unsigned char reserved[32 - sizeof(Spinlock)];
+    } *_l;
+#endif
 
-private:
-    atomic_uint32_t _readers;
-    Spinlock _lock;    
 };
 
+/** @brief Creates a ReadWriteLockUser. */
 inline
-ReadWriteLockUser :: ReadWriteLockUser() 
+ReadWriteLockUser::ReadWriteLockUser()
 {
-    _readers = 0;
+#if defined(CONFIG_SMP)
+    click_chatter("config smp is defined");
+    _l = new lock_t[num_possible_cpus()];
+#endif
 }
 
+#if defined(CONFIG_SMP)
 inline
-ReadWriteLockUser :: ~ReadWriteLockUser()
+ReadWriteLockUser::~ReadWriteLockUser()
 {
-    //  click_chatter("lock attempts: %d", _lock.get_attempts());
+    delete[] _l;
 }
+#endif
 
+/** @brief Acquires the ReadWriteLockUser for reading.
+ *
+ * On return, this thread has acquired the lock for reading.  The function
+ * will spin indefinitely until the lock is acquired.  It is OK to acquire a
+ * lock you have already acquired, but you must release it as many times as
+ * you have acquired it.
+ *
+ * @sa Spinlock::acquire
+ */
 inline void
 ReadWriteLockUser::acquire_read()
 {
-    // acquire lock to prevent writers
-    _lock.acquire();
-    _readers++;
-    _lock.release();
+#if defined(CONFIG_SMP)
+    click_processor_t my_cpu = click_get_processor();
+    _l[my_cpu]._lock.acquire();
+#endif
 }
 
+/** @brief Attempts to acquire the ReadWriteLockUser for reading.
+ * @return True iff the ReadWriteLockUser was acquired.
+ *
+ * This function will acquire the lock for reading and return true only if the
+ * ReadWriteLockUser can be acquired right away, without retries.
+ */
 inline bool
-ReadWriteLockUser::attempt_read() 
+ReadWriteLockUser::attempt_read()
 {
-    bool result = _lock.attempt();
-    if(result) {
-	_readers++;
-	_lock.release();
-	return true;
-    }
-    return false;
+#if defined(CONFIG_SMP)
+    click_processor_t my_cpu = click_get_processor();
+    bool result = _l[my_cpu]._lock.attempt();
+    if (!result)
+	click_put_processor();
+    return result;
+#else
+    return true;
+#endif
 }
-	
 
+/** @brief Releases the ReadWriteLockUser for reading.
+ *
+ * The ReadWriteLockUser must have been previously acquired by either
+ * ReadWriteLockUser::acquire_read or ReadWriteLockUser::attempt_read.  Do not call
+ * release_read() on a lock that was acquired for writing.
+ */
 inline void
 ReadWriteLockUser::release_read()
 {
-    _readers--;
+#if defined(CONFIG_SMP)
+    _l[click_current_processor()]._lock.release();
+    click_put_processor();
+#endif
 }
 
+/** @brief Acquires the ReadWriteLockUser for writing.
+ *
+ * On return, this thread has acquired the lock for writing.  The function
+ * will spin indefinitely until the lock is acquired.  It is OK to acquire a
+ * lock you have already acquired, but you must release it as many times as
+ * you have acquired it.
+ *
+ * @sa ReadWriteLockUser::acquire_read
+ */
 inline void
 ReadWriteLockUser::acquire_write()
 {
-    // acquire lock to block any future readers
-    _lock.acquire();
-    // spin till all readers are done
-    while(_readers > 0) asm volatile ("" : : : "memory");
+#if defined(CONFIG_SMP)
+    for (unsigned i = 0; i < num_possible_cpus(); i++)
+	_l[i]._lock.acquire();
+#endif
 }
 
+/** @brief Attempts to acquire the ReadWriteLockUser for writing.
+ * @return True iff the ReadWriteLockUser was acquired.
+ *
+ * This function will acquire the lock for writing and return true only if the
+ * ReadWriteLockUser can be acquired right away, without retries.  Note, however,
+ * that acquiring a ReadWriteLockUser requires as many operations as there are
+ * CPUs.
+ *
+ * @sa ReadWriteLockUser::attempt_read
+ */
 inline bool
 ReadWriteLockUser::attempt_write()
 {
-    if(_lock.attempt()) {
-	if(_readers == 0)
-	    return true;
-	else
-	    _lock.release();
-    }
-    return false;
+#if defined(CONFIG_SMP)
+    bool all = true;
+    unsigned i;
+    for (i = 0; i < num_possible_cpus(); i++)
+	if (!(_l[i]._lock.attempt())) {
+	    all = false;
+	    break;
+	}
+    if (!all)
+	for (unsigned j = 0; j < i; j++)
+	    _l[j]._lock.release();
+    return all;
+#else
+    return true;
+#endif
 }
-    
+
+/** @brief Releases the ReadWriteLockUser for writing.
+ *
+ * The ReadWriteLockUser must have been previously acquired by either
+ * ReadWriteLockUser::acquire_write or ReadWriteLockUser::attempt_write.  Do not call
+ * release_write() on a lock that was acquired for reading.
+ *
+ * @sa ReadWriteLockUser::release_read
+ */
 inline void
 ReadWriteLockUser::release_write()
 {
-    _lock.release();
+#if defined(CONFIG_SMP)
+    for (unsigned i = 0; i < num_possible_cpus(); i++)
+	_l[i]._lock.release();
+#endif
 }
 
-
-inline atomic_uint32_t
-ReadWriteLockUser::get_attempts() const
-{
-    return _lock.get_attempts();
-}
 CLICK_ENDDECLS
 #undef SPINLOCK_ASSERTLEVEL
 #endif
